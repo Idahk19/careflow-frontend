@@ -6,6 +6,8 @@ import {
   UsersRound,
   UserRound,
   LogOut,
+  Building2,
+  BriefcaseMedical,
 } from "lucide-react";
 
 function AdminSidebar() {
@@ -105,9 +107,36 @@ function AdminSidebar() {
               />
 
               <span>
-                Staff
+                Doctors
               </span>
             </NavLink>
+            <NavLink
+  to="/admin/departments"
+  className={navLinkClass}
+>
+  <Building2
+    size={19}
+    strokeWidth={1.8}
+  />
+
+  <span>
+    Departments
+  </span>
+</NavLink>
+
+<NavLink
+  to="/admin/services"
+  className={navLinkClass}
+>
+  <BriefcaseMedical
+    size={19}
+    strokeWidth={1.8}
+  />
+
+  <span>
+    Services
+  </span>
+</NavLink>
 
             <NavLink
               to="/admin/users"
