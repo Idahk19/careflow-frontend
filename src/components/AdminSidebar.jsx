@@ -65,31 +65,26 @@ function AdminSidebar() {
             : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="h-full flex flex-col">
+       <div className="h-full flex flex-col">
 
-          <div className="px-6 py-6 border-b border-black/5">
+  <div className="h-20 px-6 border-b border-black/5 flex items-center">
 
-            <div className="flex items-center justify-between">
+    <div className="flex items-center justify-between w-full">
 
-              <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3">
 
-                <div className="w-10 h-10 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
-                  <span className="text-black font-bold text-lg">
-                    C
-                  </span>
-                </div>
+        <div>
+          <h1 className="text-xl font-bold text-black">
+            CareFlow
+          </h1>
 
-                <div>
-                  <h1 className="text-xl font-bold text-black">
-                    CareFlow
-                  </h1>
+          <p className="text-[10px] text-black/50 tracking-widest uppercase">
+            Administration
+          </p>
+        </div>
 
-                  <p className="text-[10px] text-black/50 tracking-widest uppercase">
-                    Administration
-                  </p>
-                </div>
+      </div>
 
-              </div>
 
               <button
                 type="button"
