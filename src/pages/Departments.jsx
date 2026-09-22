@@ -5,6 +5,7 @@ import {
   Plus,
   Building2,
   X,
+  Search,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
 import api from "../services/api";
@@ -25,6 +26,8 @@ function Departments() {
 
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState("");
+
+  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchDepartments = async () => {
     try {
@@ -54,8 +57,8 @@ function Departments() {
 
       setError(
         error.response?.data?.detail ||
-        error.response?.data?.error ||
-        "Could not load departments."
+          error.response?.data?.error ||
+          "Could not load departments."
       );
     } finally {
       setLoading(false);
@@ -149,7 +152,6 @@ function Departments() {
       let response;
 
       if (editingDepartment) {
-        // EDIT
         response = await api.put(
           `/hospital/departments/${editingDepartment.id}/`,
           formData
@@ -163,7 +165,6 @@ function Departments() {
           )
         );
       } else {
-        // ADD
         response = await api.post(
           "/hospital/departments/",
           formData
@@ -195,10 +196,10 @@ function Departments() {
 
       setFormError(
         error.response?.data?.detail ||
-        error.response?.data?.name?.[0] ||
-        error.response?.data?.description?.[0] ||
-        error.response?.data?.error ||
-        "Could not save department."
+          error.response?.data?.name?.[0] ||
+          error.response?.data?.description?.[0] ||
+          error.response?.data?.error ||
+          "Could not save department."
       );
     } finally {
       setSaving(false);
@@ -238,11 +239,30 @@ function Departments() {
 
       setError(
         error.response?.data?.detail ||
-        error.response?.data?.error ||
-        "Could not delete department. You have doctors and services attached to this department."
+          error.response?.data?.error ||
+          "Could not delete department. You have doctors and services attached to this department."
       );
     }
   };
+
+  /* =========================
+     SEARCH
+  ========================= */
+
+  const filteredDepartments =
+    departments.filter((department) => {
+      const search =
+        searchTerm.toLowerCase();
+
+      return (
+        department.name
+          ?.toLowerCase()
+          .includes(search) ||
+        department.description
+          ?.toLowerCase()
+          .includes(search)
+      );
+    });
 
   return (
     <div className="min-h-screen bg-[#f5faf7]">
@@ -251,20 +271,41 @@ function Departments() {
 
       <main className="ml-0 lg:ml-64 min-h-screen">
 
-        <div className="p-6 lg:p-10">
+        <div className="p-6 lg:p-10 max-w-7xl">
 
-          {/* PAGE HEADER */}
+          {/* =========================
+              HEADER
+          ========================= */}
 
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
 
             <div>
 
-              <h1 className="text-3xl font-bold text-black">
+              <div className="flex items-center gap-2 text-sm text-black/40 mb-3">
+
+                <Building2 size={16} />
+
+                <span>
+                  Hospital Management
+                </span>
+
+                <span>
+                  /
+                </span>
+
+                <span className="text-black/70">
+                  Departments
+                </span>
+
+              </div>
+
+              <h1 className="text-4xl font-bold tracking-tight text-black">
                 Departments
               </h1>
 
-              <p className="mt-2 text-black/50">
-                Manage hospital departments.
+              <p className="mt-2 text-black/50 max-w-xl">
+                Organize and manage the departments
+                that make up your hospital.
               </p>
 
             </div>
@@ -272,7 +313,7 @@ function Departments() {
             <button
               type="button"
               onClick={openAddModal}
-              className="flex items-center justify-center gap-2 bg-[#bfe8d0] text-black px-5 py-3 rounded-xl font-semibold hover:bg-[#a9ddc0] transition"
+              className="self-start lg:self-auto flex items-center gap-2 bg-black text-white px-5 py-3 rounded-xl font-semibold hover:bg-black/80 transition"
             >
 
               <Plus
@@ -288,99 +329,197 @@ function Departments() {
 
           </div>
 
-          {/* ERROR */}
+          {/* =========================
+              GREEN ACCENT
+          ========================= */}
+
+          <div className="mt-8 h-px bg-black/10 relative">
+
+            <div className="absolute left-0 top-0 h-px w-24 bg-[#8bcfa9]" />
+
+          </div>
+
+          {/* =========================
+              SUMMARY / SEARCH
+          ========================= */}
+
+          <div className="mt-8 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+
+            <div>
+
+              <p className="text-sm text-black/40 uppercase tracking-wider">
+                Departments
+              </p>
+
+              <div className="mt-1 flex items-baseline gap-2">
+
+                <span className="text-2xl font-bold text-black">
+                  {departments.length}
+                </span>
+
+                <span className="text-sm text-black/50">
+                  registered departments
+                </span>
+
+              </div>
+
+            </div>
+
+            <div className="relative w-full md:w-80">
+
+              <Search
+                size={18}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-black/30"
+              />
+
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(event) =>
+                  setSearchTerm(event.target.value)
+                }
+                placeholder="Search departments..."
+                className="w-full pl-11 pr-4 py-3 bg-white border border-black/10 rounded-xl outline-none text-sm text-black placeholder:text-black/30 focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]"
+              />
+
+            </div>
+
+          </div>
+
+          {/* =========================
+              ERROR
+          ========================= */}
 
           {error && (
-            <div className="mt-8 bg-red-50 text-red-600 p-4 rounded-xl">
-              {error}
+            <div className="mt-6 flex items-start justify-between gap-4 bg-red-50 border border-red-100 text-red-600 px-5 py-4 rounded-xl">
+
+              <p className="text-sm">
+                {error}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setError("")}
+                className="text-red-400 hover:text-red-600"
+              >
+                <X size={18} />
+              </button>
+
             </div>
           )}
 
-          {/* LOADING */}
+          {/* =========================
+              LOADING
+          ========================= */}
 
           {loading && (
-            <div className="mt-8">
+            <div className="mt-10 py-16 text-center">
 
-              <p className="text-black/50">
+              <div className="w-8 h-8 border-2 border-black/10 border-t-black rounded-full animate-spin mx-auto" />
+
+              <p className="mt-4 text-sm text-black/40">
                 Loading departments...
               </p>
 
             </div>
           )}
 
-          {/* DEPARTMENTS */}
+          {/* =========================
+              DEPARTMENT LIST
+          ========================= */}
 
-          {!loading && !error && (
-            <div className="mt-8 bg-white rounded-2xl border border-black/5 overflow-hidden">
+          {!loading && (
+            <div className="mt-8">
 
-              {/* TABLE HEADER */}
+              {/* COLUMN HEADERS */}
 
-              <div className="px-6 py-5 border-b border-black/5">
+              {filteredDepartments.length > 0 && (
+                <div className="hidden md:grid grid-cols-[60px_1.5fr_2fr_120px_100px] gap-6 px-5 pb-3 text-xs font-semibold uppercase tracking-wider text-black/35">
 
-                <div className="flex items-center gap-3">
+                  <span>
+                    #
+                  </span>
 
-                  <div className="w-10 h-10 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
+                  <span>
+                    Department
+                  </span>
 
-                    <Building2
-                      size={20}
-                      className="text-black"
-                    />
+                  <span>
+                    Description
+                  </span>
 
-                  </div>
+                  <span>
+                    Status
+                  </span>
 
-                  <div>
-
-                    <h2 className="font-semibold text-black">
-                      Hospital Departments
-                    </h2>
-
-                    <p className="text-sm text-black/50">
-                      {departments.length} departments
-                    </p>
-
-                  </div>
+                  <span className="text-right">
+                    Actions
+                  </span>
 
                 </div>
+              )}
 
-              </div>
+              {/* LIST */}
 
-              {/* EMPTY */}
+              {filteredDepartments.length === 0 ? (
 
-              {departments.length === 0 ? (
-                <div className="p-10 text-center">
+                <div className="py-20 text-center border-t border-black/10">
 
                   <Building2
-                    size={40}
+                    size={38}
                     className="mx-auto text-black/20"
+                    strokeWidth={1.5}
                   />
 
-                  <p className="mt-4 text-black/50">
-                    No departments found.
+                  <h3 className="mt-4 font-semibold text-black">
+                    {searchTerm
+                      ? "No departments found"
+                      : "No departments yet"}
+                  </h3>
+
+                  <p className="mt-1 text-sm text-black/40">
+                    {searchTerm
+                      ? "Try a different search."
+                      : "Add your first hospital department to get started."}
                   </p>
 
                 </div>
+
               ) : (
 
-                <div className="divide-y divide-black/5">
+                <div className="border-t border-black/10">
 
-                  {departments.map(
-                    (department) => (
+                  {filteredDepartments.map(
+                    (department, index) => (
 
                       <div
                         key={department.id}
-                        className="px-6 py-5 flex items-center justify-between gap-4 hover:bg-[#f8fcfa] transition"
+                        className="group grid grid-cols-1 md:grid-cols-[60px_1.5fr_2fr_120px_100px] gap-4 md:gap-6 px-5 py-6 border-b border-black/10 hover:bg-white/60 transition"
                       >
 
-                        {/* DEPARTMENT INFO */}
+                        {/* NUMBER */}
 
-                        <div className="flex items-center gap-4 min-w-0">
+                        <div className="hidden md:flex items-start pt-1">
 
-                          <div className="w-12 h-12 shrink-0 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
+                          <span className="text-sm font-medium text-black/25">
+                            {String(index + 1).padStart(
+                              2,
+                              "0"
+                            )}
+                          </span>
+
+                        </div>
+
+                        {/* DEPARTMENT */}
+
+                        <div className="flex items-start gap-3">
+
+                          <div className="mt-0.5 w-9 h-9 rounded-lg bg-[#e8f5ee] flex items-center justify-center shrink-0">
 
                             <Building2
-                              size={21}
+                              size={17}
                               className="text-black"
-                              strokeWidth={1.8}
+                              strokeWidth={1.7}
                             />
 
                           </div>
@@ -391,33 +530,57 @@ function Departments() {
                               {department.name}
                             </h3>
 
-                            <p className="mt-1 text-sm text-black/50">
-                              {department.description}
+                            <p className="md:hidden mt-1 text-sm text-black/45">
+                              {department.description ||
+                                "No description"}
                             </p>
-
-                            <span
-                              className={`inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium ${
-                                department.is_active
-                                  ? "bg-[#bfe8d0] text-black"
-                                  : "bg-black/5 text-black/50"
-                              }`}
-                            >
-
-                              {department.is_active
-                                ? "Active"
-                                : "Inactive"}
-
-                            </span>
 
                           </div>
 
                         </div>
 
+                        {/* DESCRIPTION */}
+
+                        <div className="hidden md:block">
+
+                          <p className="text-sm leading-6 text-black/50 line-clamp-2">
+                            {department.description ||
+                              "No description provided."}
+                          </p>
+
+                        </div>
+
+                        {/* STATUS */}
+
+                        <div className="flex items-center">
+
+                          <span
+                            className={`text-xs font-semibold ${
+                              department.is_active
+                                ? "text-[#38845a]"
+                                : "text-black/35"
+                            }`}
+                          >
+
+                            <span
+                              className={`inline-block w-1.5 h-1.5 rounded-full mr-2 ${
+                                department.is_active
+                                  ? "bg-[#5eaf7d]"
+                                  : "bg-black/25"
+                              }`}
+                            />
+
+                            {department.is_active
+                              ? "Active"
+                              : "Inactive"}
+
+                          </span>
+
+                        </div>
+
                         {/* ACTIONS */}
 
-                        <div className="flex items-center gap-2 shrink-0">
-
-                          {/* EDIT */}
+                        <div className="flex items-center justify-end gap-1">
 
                           <button
                             type="button"
@@ -426,18 +589,16 @@ function Departments() {
                                 department
                               )
                             }
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-black hover:bg-[#e8f5ee] transition"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-black/50 hover:text-black hover:bg-[#e8f5ee] transition"
                             title="Edit department"
                           >
 
                             <Pencil
-                              size={18}
+                              size={17}
                               strokeWidth={1.8}
                             />
 
                           </button>
-
-                          {/* DELETE */}
 
                           <button
                             type="button"
@@ -446,12 +607,12 @@ function Departments() {
                                 department.id
                               )
                             }
-                            className="w-10 h-10 rounded-xl flex items-center justify-center text-red-600 hover:bg-red-50 transition"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-black/30 hover:text-red-600 hover:bg-red-50 transition"
                             title="Delete department"
                           >
 
                             <Trash2
-                              size={18}
+                              size={17}
                               strokeWidth={1.8}
                             />
 
@@ -559,8 +720,6 @@ function Departments() {
               className="p-6"
             >
 
-              {/* NAME */}
-
               <div>
 
                 <label
@@ -583,8 +742,6 @@ function Departments() {
 
               </div>
 
-              {/* DESCRIPTION */}
-
               <div className="mt-5">
 
                 <label
@@ -606,8 +763,6 @@ function Departments() {
 
               </div>
 
-              {/* ACTIVE */}
-
               <div className="mt-5 flex items-center gap-3">
 
                 <input
@@ -628,17 +783,11 @@ function Departments() {
 
               </div>
 
-              {/* FORM ERROR */}
-
               {formError && (
-
                 <div className="mt-5 bg-red-50 text-red-600 px-4 py-3 rounded-xl text-sm">
                   {formError}
                 </div>
-
               )}
-
-              {/* BUTTONS */}
 
               <div className="mt-7 flex gap-3">
 
