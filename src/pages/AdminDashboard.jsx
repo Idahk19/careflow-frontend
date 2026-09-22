@@ -5,6 +5,7 @@ import {
   Stethoscope,
   BriefcaseMedical,
   CalendarDays,
+  Building2,
 } from "lucide-react";
 import AdminSidebar from "../components/AdminSidebar";
 import api from "../services/api";
@@ -79,6 +80,16 @@ function AdminDashboard() {
       value: dashboardData?.total_appointments ?? 0,
       icon: CalendarDays,
     },
+    {
+      title: "Total Departments",
+      value: dashboardData?.total_departments ?? 0,
+      icon: Building2,
+    },
+    {
+      title: "Total Users",
+      value: dashboardData?.total_users ?? 0,
+      icon: UsersRound,
+    },
   ];
 
   return (
@@ -112,7 +123,7 @@ function AdminDashboard() {
 
           {!loading && !error && dashboardData && (
             <>
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+              <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
 
                 {stats.map((stat) => {
                   const Icon = stat.icon;
