@@ -187,21 +187,6 @@ function AdminSidebar() {
               </NavLink>
 
               <NavLink
-                to="/admin/users"
-                className={navLinkClass}
-                onClick={closeSidebar}
-              >
-                <UsersRound
-                  size={19}
-                  strokeWidth={1.8}
-                />
-
-                <span>
-                  Users
-                </span>
-              </NavLink>
-
-              <NavLink
                 to="/admin/patients"
                 className={navLinkClass}
                 onClick={closeSidebar}
@@ -222,32 +207,6 @@ function AdminSidebar() {
 
           <div className="p-4 border-t border-black/5">
 
-            <div className="bg-[#e8f5ee] rounded-2xl p-4 mb-3">
-
-              <div className="flex items-center gap-3">
-
-                <div className="w-10 h-10 rounded-full bg-[#bfe8d0] flex items-center justify-center">
-                  <UserRound
-                    size={19}
-                    strokeWidth={1.8}
-                  />
-                </div>
-
-                <div className="min-w-0">
-
-                  <p className="text-sm font-semibold text-black truncate">
-                    {user?.first_name || user?.username}
-                  </p>
-
-                  <p className="text-xs text-black/50">
-                    Administrator
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
 
             <button
               type="button"
