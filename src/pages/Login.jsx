@@ -22,47 +22,62 @@ function Login() {
   };
 
   const handleSubmit = async (event) => {
-    event.preventDefault();
+  event.preventDefault();
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+  setLoading(true);
+  setError("");
+  setSuccess("");
 
-    try {
-      const response = await api.post(
-        "/accounts/login/",
-        formData
-      );
+  try {
+    const response = await api.post(
+      "/accounts/login/",
+      formData
+    );
 
-      const { access, refresh, user } = response.data;
+    const { access, refresh, user } = response.data;
 
-      localStorage.setItem("access_token", access);
-      localStorage.setItem("refresh_token", refresh);
-      localStorage.setItem("user", JSON.stringify(user));
+    localStorage.setItem("access_token", access);
+    localStorage.setItem("refresh_token", refresh);
+    localStorage.setItem("user", JSON.stringify(user));
 
-      setSuccess(
-        `Welcome back, ${user.first_name || user.username}!`
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      if (error.response) {
-        if (error.response.status === 401) {
-          setError("Invalid username or password.");
-        } else {
-          setError(
-            error.response.data?.error ||
-            "Login failed. Please try again."
-          );
-        }
-      } else {
-        setError("Could not connect to the server.");
-      }
-    } finally {
-      setLoading(false);
+    if (user.role === "ADMIN") {
+      window.location.href = "/admin/dashboard";
+      return;
     }
-  };
+
+    if (user.role === "PATIENT") {
+      window.location.href = "/patient/dashboard";
+      return;
+    }
+
+    if (user.role === "STAFF") {
+      window.location.href = "/staff/dashboard";
+      return;
+    }
+
+    setSuccess(
+      `Welcome back, ${user.first_name || user.username}!`
+    );
+
+  } catch (error) {
+    console.error(error);
+
+    if (error.response) {
+      if (error.response.status === 401) {
+        setError("Invalid username or password.");
+      } else {
+        setError(
+          error.response.data?.error ||
+          "Login failed. Please try again."
+        );
+      }
+    } else {
+      setError("Could not connect to the server.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#e8f5ee] flex items-center justify-center px-6 py-10">
