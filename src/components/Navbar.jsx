@@ -7,6 +7,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  Info,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -17,6 +18,12 @@ function Navbar() {
   const user = JSON.parse(localStorage.getItem("user"));
 
   const isSignedIn = !!localStorage.getItem("access_token");
+
+  const userRole = user?.role?.toUpperCase();
+
+  const isAdminOrDoctor =
+    userRole === "ADMIN" ||
+    userRole === "DOCTOR";
 
   const navLinkClass = ({ isActive }) =>
     `transition ${
@@ -74,36 +81,56 @@ function Navbar() {
                 Home
               </NavLink>
 
-              <NavLink
-                to="/appointments"
-                className={navLinkClass}
-              >
-                <span className="flex items-center gap-2">
-                  <CalendarDays size={17} strokeWidth={1.8} />
-                  My Appointments
-                </span>
-              </NavLink>
-
-              <NavLink
-                to="/appointments/book"
-                className={navLinkClass}
-              >
-                Book Appointment
-              </NavLink>
-
-              {isSignedIn && (
+              {isAdminOrDoctor ? (
                 <NavLink
-                  to="/my-care"
+                  to="/about"
                   className={navLinkClass}
                 >
                   <span className="flex items-center gap-2">
-                    <HeartPulse
+                    <Info
                       size={17}
                       strokeWidth={1.8}
                     />
-                    My Care
+                    About
                   </span>
                 </NavLink>
+              ) : (
+                <>
+                  <NavLink
+                    to="/appointments"
+                    className={navLinkClass}
+                  >
+                    <span className="flex items-center gap-2">
+                      <CalendarDays
+                        size={17}
+                        strokeWidth={1.8}
+                      />
+                      My Appointments
+                    </span>
+                  </NavLink>
+
+                  <NavLink
+                    to="/appointments/book"
+                    className={navLinkClass}
+                  >
+                    Book Appointment
+                  </NavLink>
+
+                  {isSignedIn && (
+                    <NavLink
+                      to="/my-care"
+                      className={navLinkClass}
+                    >
+                      <span className="flex items-center gap-2">
+                        <HeartPulse
+                          size={17}
+                          strokeWidth={1.8}
+                        />
+                        My Care
+                      </span>
+                    </NavLink>
+                  )}
+                </>
               )}
 
             </div>
@@ -146,7 +173,6 @@ function Navbar() {
                     }
                     className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#e8f5ee] transition"
                   >
-
                     <div className="w-9 h-9 rounded-full bg-[#bfe8d0] flex items-center justify-center">
                       <UserRound
                         size={19}
@@ -157,15 +183,18 @@ function Navbar() {
 
                     <div className="text-left">
                       <p className="text-sm font-semibold text-black">
-                        {user?.first_name || user?.username}
+                        {user?.first_name ||
+                          user?.username}
                       </p>
 
                       <p className="text-xs text-black/50">
                         {user?.role === "PATIENT"
                           ? "Patient"
+                          : user?.role === "DOCTOR"
+                          ? "Doctor"
                           : user?.role === "STAFF"
-                            ? "Staff"
-                            : "Admin"}
+                          ? "Staff"
+                          : "Admin"}
                       </p>
                     </div>
 
@@ -178,7 +207,6 @@ function Navbar() {
                           : ""
                       }`}
                     />
-
                   </button>
 
                   {profileOpen && (
@@ -201,22 +229,24 @@ function Navbar() {
                         </span>
                       </Link>
 
-                      <Link
-                        to="/my-care"
-                        onClick={() =>
-                          setProfileOpen(false)
-                        }
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee] transition"
-                      >
-                        <HeartPulse
-                          size={18}
-                          strokeWidth={1.8}
-                        />
+                      {!isAdminOrDoctor && (
+                        <Link
+                          to="/my-care"
+                          onClick={() =>
+                            setProfileOpen(false)
+                          }
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee] transition"
+                        >
+                          <HeartPulse
+                            size={18}
+                            strokeWidth={1.8}
+                          />
 
-                        <span className="text-sm font-medium">
-                          My Care
-                        </span>
-                      </Link>
+                          <span className="text-sm font-medium">
+                            My Care
+                          </span>
+                        </Link>
+                      )}
 
                       <div className="border-t border-black/5 my-2"></div>
 
@@ -266,7 +296,9 @@ function Navbar() {
 
                 <NavLink
                   to="/"
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() =>
+                    setMenuOpen(false)
+                  }
                   className={navLinkClass}
                 >
                   <div className="px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
@@ -274,48 +306,74 @@ function Navbar() {
                   </div>
                 </NavLink>
 
-                <NavLink
-                  to="/appointments"
-                  onClick={() => setMenuOpen(false)}
-                  className={navLinkClass}
-                >
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                    <CalendarDays
-                      size={18}
-                      strokeWidth={1.8}
-                    />
-                    My Appointments
-                  </div>
-                </NavLink>
-
-                <NavLink
-                  to="/appointments/book"
-                  onClick={() => setMenuOpen(false)}
-                  className={navLinkClass}
-                >
-                  <div className="px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                    Book Appointment
-                  </div>
-                </NavLink>
-
-                {isSignedIn && (
+                {isAdminOrDoctor ? (
+                  <NavLink
+                    to="/about"
+                    onClick={() =>
+                      setMenuOpen(false)
+                    }
+                    className={navLinkClass}
+                  >
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
+                      <Info
+                        size={18}
+                        strokeWidth={1.8}
+                      />
+                      About
+                    </div>
+                  </NavLink>
+                ) : (
                   <>
                     <NavLink
-                      to="/my-care"
+                      to="/appointments"
                       onClick={() =>
                         setMenuOpen(false)
                       }
                       className={navLinkClass}
                     >
                       <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                        <HeartPulse
+                        <CalendarDays
                           size={18}
                           strokeWidth={1.8}
                         />
-                        My Care
+                        My Appointments
                       </div>
                     </NavLink>
 
+                    <NavLink
+                      to="/appointments/book"
+                      onClick={() =>
+                        setMenuOpen(false)
+                      }
+                      className={navLinkClass}
+                    >
+                      <div className="px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
+                        Book Appointment
+                      </div>
+                    </NavLink>
+
+                    {isSignedIn && (
+                      <NavLink
+                        to="/my-care"
+                        onClick={() =>
+                          setMenuOpen(false)
+                        }
+                        className={navLinkClass}
+                      >
+                        <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
+                          <HeartPulse
+                            size={18}
+                            strokeWidth={1.8}
+                          />
+                          My Care
+                        </div>
+                      </NavLink>
+                    )}
+                  </>
+                )}
+
+                {isSignedIn && (
+                  <>
                     <NavLink
                       to="/profile"
                       onClick={() =>
