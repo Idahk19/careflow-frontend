@@ -142,7 +142,7 @@ function AdminSidebar() {
               </NavLink>
 
               <NavLink
-                to="/admin/staff"
+                to="/admin/doctors"
                 className={navLinkClass}
                 onClick={closeSidebar}
               >
