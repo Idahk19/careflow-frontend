@@ -7,6 +7,7 @@ import AdminDashboard from "./pages/Admindashboard";
 import Departments from "./pages/Departments";
 import Doctors from "./pages/Doctors";
 import Services from "./pages/Services";
+import Patients from "./pages/Patients";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
         <Route path="/admin/departments" element={<Departments />} />
         <Route path="/admin/doctors" element={<Doctors />} />
         <Route path="/admin/services" element={<Services />} />
+        <Route path="/admin/patients" element={<Patients />} />
       </Routes>
     </BrowserRouter>
   );
