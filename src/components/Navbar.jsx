@@ -161,7 +161,11 @@ function Navbar() {
                       </p>
 
                       <p className="text-xs text-black/50">
-                        Patient
+                        {user?.role === "PATIENT"
+                          ? "Patient"
+                          : user?.role === "STAFF"
+                            ? "Staff"
+                            : "Admin"}
                       </p>
                     </div>
 
@@ -204,7 +208,7 @@ function Navbar() {
                         }
                         className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee] transition"
                       >
-                        <ClipboardHeart
+                        <HeartPulse
                           size={18}
                           strokeWidth={1.8}
                         />
