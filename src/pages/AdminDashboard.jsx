@@ -96,7 +96,7 @@ function AdminDashboard() {
     <div className="min-h-screen bg-[#f5faf7]">
       <AdminSidebar />
 
-      <main className="ml-64 min-h-screen">
+      <main className="ml-0 lg:ml-64 min-h-screen">
         <div className="p-10">
 
           <h1 className="text-3xl font-bold text-black">
