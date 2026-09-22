@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -8,10 +9,14 @@ import {
   LogOut,
   Building2,
   BriefcaseMedical,
+  Menu,
+  X,
 } from "lucide-react";
 
 function AdminSidebar() {
   const navigate = useNavigate();
+
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const user = JSON.parse(
     localStorage.getItem("user")
@@ -25,6 +30,10 @@ function AdminSidebar() {
     navigate("/login");
   };
 
+  const closeSidebar = () => {
+    setSidebarOpen(false);
+  };
+
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl transition ${
       isActive
@@ -33,192 +42,233 @@ function AdminSidebar() {
     }`;
 
   return (
-    <aside className="fixed top-0 left-0 z-40 h-screen w-64 bg-white border-r border-black/5">
+    <>
+      <button
+        type="button"
+        onClick={() => setSidebarOpen(true)}
+        className="lg:hidden fixed top-5 left-5 z-50 w-11 h-11 rounded-xl bg-white border border-black/5 shadow-sm flex items-center justify-center text-black"
+      >
+        <Menu size={22} />
+      </button>
 
-      <div className="h-full flex flex-col">
+      {sidebarOpen && (
+        <div
+          onClick={closeSidebar}
+          className="lg:hidden fixed inset-0 z-40 bg-black/30"
+        />
+      )}
 
-        <div className="px-6 py-6 border-b border-black/5">
+      <aside
+        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-black/5 transform transition-transform duration-300 ${
+          sidebarOpen
+            ? "translate-x-0"
+            : "-translate-x-full lg:translate-x-0"
+        }`}
+      >
+        <div className="h-full flex flex-col">
 
-          <div className="flex items-center gap-3">
+          <div className="px-6 py-6 border-b border-black/5">
 
-            <div className="w-10 h-10 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
-              <span className="text-black font-bold text-lg">
-                C
-              </span>
-            </div>
+            <div className="flex items-center justify-between">
 
-            <div>
-              <h1 className="text-xl font-bold text-black">
-                CareFlow
-              </h1>
+              <div className="flex items-center gap-3">
 
-              <p className="text-[10px] text-black/50 tracking-widest uppercase">
-                Administration
-              </p>
+                <div className="w-10 h-10 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
+                  <span className="text-black font-bold text-lg">
+                    C
+                  </span>
+                </div>
+
+                <div>
+                  <h1 className="text-xl font-bold text-black">
+                    CareFlow
+                  </h1>
+
+                  <p className="text-[10px] text-black/50 tracking-widest uppercase">
+                    Administration
+                  </p>
+                </div>
+
+              </div>
+
+              <button
+                type="button"
+                onClick={closeSidebar}
+                className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-black/60 hover:bg-black/5 hover:text-black transition"
+              >
+                <X size={20} />
+              </button>
+
             </div>
 
           </div>
 
-        </div>
+          <div className="px-4 py-6 flex-1 overflow-y-auto">
 
-        <div className="px-4 py-6 flex-1">
+            <p className="px-4 mb-3 text-xs font-semibold text-black/40 uppercase tracking-wider">
+              Management
+            </p>
 
-          <p className="px-4 mb-3 text-xs font-semibold text-black/40 uppercase tracking-wider">
-            Management
-          </p>
+            <nav className="space-y-1">
 
-          <nav className="space-y-1">
+              <NavLink
+                to="/admin/dashboard"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <LayoutDashboard
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-            <NavLink
-              to="/admin/dashboard"
-              className={navLinkClass}
-            >
-              <LayoutDashboard
-                size={19}
-                strokeWidth={1.8}
-              />
+                <span>
+                  Dashboard
+                </span>
+              </NavLink>
 
-              <span>
-                Dashboard
-              </span>
-            </NavLink>
+              <NavLink
+                to="/admin/appointments"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <CalendarDays
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-            <NavLink
-              to="/admin/appointments"
-              className={navLinkClass}
-            >
-              <CalendarDays
-                size={19}
-                strokeWidth={1.8}
-              />
+                <span>
+                  Appointments
+                </span>
+              </NavLink>
 
-              <span>
-                Appointments
-              </span>
-            </NavLink>
+              <NavLink
+                to="/admin/staff"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <Stethoscope
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-            <NavLink
-              to="/admin/staff"
-              className={navLinkClass}
-            >
-              <Stethoscope
-                size={19}
-                strokeWidth={1.8}
-              />
+                <span>
+                  Doctors
+                </span>
+              </NavLink>
 
-              <span>
-                Doctors
-              </span>
-            </NavLink>
-            <NavLink
-  to="/admin/departments"
-  className={navLinkClass}
->
-  <Building2
-    size={19}
-    strokeWidth={1.8}
-  />
+              <NavLink
+                to="/admin/departments"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <Building2
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-  <span>
-    Departments
-  </span>
-</NavLink>
+                <span>
+                  Departments
+                </span>
+              </NavLink>
 
-<NavLink
-  to="/admin/services"
-  className={navLinkClass}
->
-  <BriefcaseMedical
-    size={19}
-    strokeWidth={1.8}
-  />
+              <NavLink
+                to="/admin/services"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <BriefcaseMedical
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-  <span>
-    Services
-  </span>
-</NavLink>
+                <span>
+                  Services
+                </span>
+              </NavLink>
 
-            <NavLink
-              to="/admin/users"
-              className={navLinkClass}
-            >
-              <UsersRound
-                size={19}
-                strokeWidth={1.8}
-              />
+              <NavLink
+                to="/admin/users"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <UsersRound
+                  size={19}
+                  strokeWidth={1.8}
+                />
 
-              <span>
-                Users
-              </span>
-            </NavLink>
+                <span>
+                  Users
+                </span>
+              </NavLink>
 
-            <NavLink
-              to="/admin/patients"
-              className={navLinkClass}
-            >
-              <UserRound
-                size={19}
-                strokeWidth={1.8}
-              />
-
-              <span>
-                Patients
-              </span>
-            </NavLink>
-
-          </nav>
-
-        </div>
-
-        <div className="p-4 border-t border-black/5">
-
-          <div className="bg-[#e8f5ee] rounded-2xl p-4 mb-3">
-
-            <div className="flex items-center gap-3">
-
-              <div className="w-10 h-10 rounded-full bg-[#bfe8d0] flex items-center justify-center">
+              <NavLink
+                to="/admin/patients"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
                 <UserRound
                   size={19}
                   strokeWidth={1.8}
                 />
-              </div>
 
-              <div className="min-w-0">
+                <span>
+                  Patients
+                </span>
+              </NavLink>
 
-                <p className="text-sm font-semibold text-black truncate">
-                  {user?.first_name || user?.username}
-                </p>
+            </nav>
 
-                <p className="text-xs text-black/50">
-                  Administrator
-                </p>
+          </div>
+
+          <div className="p-4 border-t border-black/5">
+
+            <div className="bg-[#e8f5ee] rounded-2xl p-4 mb-3">
+
+              <div className="flex items-center gap-3">
+
+                <div className="w-10 h-10 rounded-full bg-[#bfe8d0] flex items-center justify-center">
+                  <UserRound
+                    size={19}
+                    strokeWidth={1.8}
+                  />
+                </div>
+
+                <div className="min-w-0">
+
+                  <p className="text-sm font-semibold text-black truncate">
+                    {user?.first_name || user?.username}
+                  </p>
+
+                  <p className="text-xs text-black/50">
+                    Administrator
+                  </p>
+
+                </div>
 
               </div>
 
             </div>
 
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition"
+            >
+              <LogOut
+                size={19}
+                strokeWidth={1.8}
+              />
+
+              <span className="font-medium">
+                Sign Out
+              </span>
+            </button>
+
           </div>
 
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition"
-          >
-            <LogOut
-              size={19}
-              strokeWidth={1.8}
-            />
-
-            <span className="font-medium">
-              Sign Out
-            </span>
-          </button>
-
         </div>
-
-      </div>
-
-    </aside>
+      </aside>
+    </>
   );
 }
 
