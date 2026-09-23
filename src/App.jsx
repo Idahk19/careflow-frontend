@@ -11,6 +11,8 @@ import Patients from "./pages/Patients";
 import Appointments from "./pages/Appointments";
 import Profile from "./pages/Profile";
 import DoctorDashboard from "./pages/DoctorDashboard";
+import DoctorQueue from "./pages/DoctorQueue";
+import DoctorAppointments from "./pages/DoctorAppointments";
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
         <Route path="/admin/appointments" element={<Appointments />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/doctor/dashboard" element={<DoctorDashboard />} />
+        <Route path="/doctor/queue" element={<DoctorQueue />} />
+        <Route path="/doctor/appointments" element={<DoctorAppointments />} />
       </Routes>
     </BrowserRouter>
   );
