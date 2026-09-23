@@ -114,6 +114,20 @@ function DoctorSidebar() {
               </NavLink>
 
               <NavLink
+                to="/doctor/allappointments"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <CalendarDays
+                  size={19}
+                  strokeWidth={1.8}
+                />
+
+                <span>
+                  All Appointments
+                </span>
+              </NavLink>
+              <NavLink
                 to="/doctor/appointments"
                 className={navLinkClass}
                 onClick={closeSidebar}
@@ -124,7 +138,7 @@ function DoctorSidebar() {
                 />
 
                 <span>
-                  My Appointments
+                  Today's Appointments
                 </span>
               </NavLink>
 
@@ -143,22 +157,8 @@ function DoctorSidebar() {
                 </span>
               </NavLink>
 
-              <NavLink
-                to="/doctor/completed"
-                className={navLinkClass}
-                onClick={closeSidebar}
-              >
-                <CircleCheck
-                  size={19}
-                  strokeWidth={1.8}
-                />
-
-                <span>
-                  Completed
-                </span>
-              </NavLink>
           <NavLink
-  to="/doctor/completed"
+  to="/doctor/history"
   className={navLinkClass}
   onClick={closeSidebar}
 >
