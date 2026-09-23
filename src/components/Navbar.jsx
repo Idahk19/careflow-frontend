@@ -32,13 +32,26 @@ function Navbar() {
         : "text-black/60 hover:text-black"
     }`;
 
-  const handleLogout = () => {
+ const handleLogout = async () => {
+  const refreshToken = localStorage.getItem("refresh_token");
+
+  try {
+    if (refreshToken) {
+      await api.post("/accounts/logout/", {
+        refresh: refreshToken,
+      });
+    }
+  } catch (error) {
+    console.error("Logout API error:", error);
+  } finally {
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user");
 
+    setMenuOpen(false);
     window.location.href = "/login";
-  };
+  }
+};
 
   return (
     <header className="sticky top-0 z-50">
