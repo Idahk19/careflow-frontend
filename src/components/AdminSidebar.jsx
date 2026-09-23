@@ -22,13 +22,6 @@ function AdminSidebar() {
     localStorage.getItem("user")
   );
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user");
-
-    navigate("/login");
-  };
 
   const closeSidebar = () => {
     setSidebarOpen(false);
@@ -197,26 +190,6 @@ function AdminSidebar() {
               </NavLink>
 
             </nav>
-
-          </div>
-
-          <div className="p-4 border-t border-black/5">
-
-
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition"
-            >
-              <LogOut
-                size={19}
-                strokeWidth={1.8}
-              />
-
-              <span className="font-medium">
-                Sign Out
-              </span>
-            </button>
 
           </div>
 
