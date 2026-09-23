@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   X,
+  History,
 } from "lucide-react";
 import api from "../services/api";
 
@@ -128,21 +129,6 @@ function DoctorSidebar() {
               </NavLink>
 
               <NavLink
-                to="/doctor/checked-in"
-                className={navLinkClass}
-                onClick={closeSidebar}
-              >
-                <UserCheck
-                  size={19}
-                  strokeWidth={1.8}
-                />
-
-                <span>
-                  Checked In
-                </span>
-              </NavLink>
-
-              <NavLink
                 to="/doctor/queue"
                 className={navLinkClass}
                 onClick={closeSidebar}
@@ -171,6 +157,18 @@ function DoctorSidebar() {
                   Completed
                 </span>
               </NavLink>
+          <NavLink
+  to="/doctor/completed"
+  className={navLinkClass}
+  onClick={closeSidebar}
+>
+  <History
+    size={19}
+    strokeWidth={1.8}
+  />
+
+  <span>History</span>
+</NavLink>
 
             </nav>
 
