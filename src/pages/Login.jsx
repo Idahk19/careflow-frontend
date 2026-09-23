@@ -51,7 +51,7 @@ function Login() {
     }
 
     if (user.role === "STAFF") {
-      window.location.href = "/staff/dashboard";
+      window.location.href = "/doctor/dashboard";
       return;
     }
 
