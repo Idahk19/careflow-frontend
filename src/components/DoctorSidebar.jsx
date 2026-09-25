@@ -157,19 +157,6 @@ function DoctorSidebar() {
                 </span>
               </NavLink>
 
-          <NavLink
-  to="/doctor/history"
-  className={navLinkClass}
-  onClick={closeSidebar}
->
-  <History
-    size={19}
-    strokeWidth={1.8}
-  />
-
-  <span>History</span>
-</NavLink>
-
             </nav>
 
           </div>
