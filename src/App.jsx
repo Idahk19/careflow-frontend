@@ -14,6 +14,7 @@ import DoctorDashboard from "./pages/DoctorDashboard";
 import DoctorQueue from "./pages/DoctorQueue";
 import DoctorAppointments from "./pages/DoctorAppointments";
 import DoctorAllAppointments from "./pages/DoctorAllappointments";
+import PatientDashboard from "./pages/PatientDashboard";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
         <Route path="/doctor/queue" element={<DoctorQueue />} />
         <Route path="/doctor/appointments" element={<DoctorAppointments />} />
         <Route path="/doctor/allappointments" element={<DoctorAllAppointments />} />
+        <Route path="/patient/dashboard" element={<PatientDashboard />} />
       </Routes>
     </BrowserRouter>
   );
