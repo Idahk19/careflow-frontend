@@ -597,7 +597,7 @@ function DoctorAllAppointments() {
 
                         <td className="px-6 py-5">
                           <span
-                            className={`inline-flex px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(
+                            className={`inline-flex bg-[#e8f5ee] text-green-700 px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(
                               appointment.status
                             )}`}
                           >
