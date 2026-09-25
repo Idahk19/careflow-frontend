@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   Clock3,
@@ -14,20 +13,44 @@ import DoctorSidebar from "../components/DoctorSidebar";
 import api from "../services/api";
 
 function DoctorAppointments() {
-  const navigate = useNavigate();
-
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(null);
   const [error, setError] = useState("");
 
+  // Get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  };
+
+  // Fetch all doctor's appointments and filter to today
   const fetchAppointments = async () => {
     try {
-      const response = await api.get("/appointments/doctor/today/");
-      setAppointments(
-        Array.isArray(response.data) ? response.data : []
-      );
+      setLoading(true);
       setError("");
+
+      // Get ALL appointments for the logged-in doctor
+      const response = await api.get("/appointments/doctor/today/");
+
+      const allAppointments = Array.isArray(response.data)
+        ? response.data
+        : [];
+
+      // Get the current date from the browser
+      const today = getTodayDate();
+
+      // Keep only appointments whose date is today
+      const todaysAppointments = allAppointments.filter(
+        (appointment) => appointment.date === today
+      );
+
+      setAppointments(todaysAppointments);
     } catch (error) {
       console.error("Doctor appointments API error:", error);
 
@@ -35,7 +58,8 @@ function DoctorAppointments() {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         localStorage.removeItem("user");
-        navigate("/login");
+
+        window.location.href = "/login";
         return;
       }
 
@@ -56,6 +80,7 @@ function DoctorAppointments() {
     }
   };
 
+  // Load appointments when page opens
   useEffect(() => {
     fetchAppointments();
   }, []);
@@ -69,6 +94,7 @@ function DoctorAppointments() {
         appointment: appointmentId,
       });
 
+      // Refresh today's appointments after check-in
       await fetchAppointments();
     } catch (error) {
       console.error("Check-in error:", error);
@@ -99,7 +125,9 @@ function DoctorAppointments() {
   };
 
   const formatDate = (date) => {
-    if (!date) return "Today";
+    if (!date) {
+      return "Today";
+    }
 
     return new Date(`${date}T00:00:00`).toLocaleDateString([], {
       weekday: "long",
@@ -143,10 +171,12 @@ function DoctorAppointments() {
 
       <main className="ml-0 lg:ml-64 min-h-screen">
         <div className="p-6 lg:p-10 max-w-7xl">
+
+          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-black">
-                My Appointments
+                Today's Appointments
               </h1>
 
               <p className="mt-2 text-black/50">
@@ -154,6 +184,7 @@ function DoctorAppointments() {
               </p>
             </div>
 
+            {/* Refresh Button */}
             <button
               type="button"
               onClick={fetchAppointments}
@@ -164,16 +195,19 @@ function DoctorAppointments() {
                 size={17}
                 className={loading ? "animate-spin" : ""}
               />
-              Refresh
+
+              {loading ? "Refreshing..." : "Refresh"}
             </button>
           </div>
 
+          {/* Error */}
           {error && (
             <div className="mt-8 bg-red-50 text-red-600 p-4 rounded-xl">
               {error}
             </div>
           )}
 
+          {/* Loading */}
           {loading ? (
             <div className="mt-8 bg-white rounded-2xl border border-black/5 p-8">
               <p className="text-black/50">
@@ -182,7 +216,10 @@ function DoctorAppointments() {
             </div>
           ) : (
             <>
+              {/* Summary Cards */}
               <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                {/* Number of appointments */}
                 <div className="bg-[#bfe8d0] rounded-2xl p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -196,11 +233,15 @@ function DoctorAppointments() {
                     </div>
 
                     <div className="w-11 h-11 rounded-xl bg-white/70 flex items-center justify-center">
-                      <CalendarDays size={22} strokeWidth={1.8} />
+                      <CalendarDays
+                        size={22}
+                        strokeWidth={1.8}
+                      />
                     </div>
                   </div>
                 </div>
 
+                {/* Current date */}
                 <div className="bg-white rounded-2xl p-6 border border-black/5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -209,17 +250,21 @@ function DoctorAppointments() {
                       </p>
 
                       <p className="mt-3 text-xl font-bold text-black">
-                        {formatDate(appointments[0]?.date)}
+                        {formatDate(getTodayDate())}
                       </p>
                     </div>
 
                     <div className="w-11 h-11 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
-                      <Clock3 size={22} strokeWidth={1.8} />
+                      <Clock3
+                        size={22}
+                        strokeWidth={1.8}
+                      />
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Today's Schedule */}
               <div className="mt-10">
                 <div className="flex items-center justify-between mb-5">
                   <div>
@@ -238,10 +283,14 @@ function DoctorAppointments() {
                   </span>
                 </div>
 
+                {/* No appointments */}
                 {appointments.length === 0 ? (
                   <div className="bg-white rounded-2xl border border-black/5 p-12 text-center">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-[#e8f5ee] flex items-center justify-center">
-                      <CalendarDays size={26} strokeWidth={1.8} />
+                      <CalendarDays
+                        size={26}
+                        strokeWidth={1.8}
+                      />
                     </div>
 
                     <h3 className="mt-5 text-lg font-semibold text-black">
@@ -253,7 +302,10 @@ function DoctorAppointments() {
                     </p>
                   </div>
                 ) : (
+                  /* Appointments table */
                   <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
+
+                    {/* Table header */}
                     <div className="hidden lg:grid grid-cols-[1.4fr_1.3fr_1fr_1fr_130px] gap-4 px-6 py-4 bg-[#f8fcfa] border-b border-black/5 text-xs font-semibold text-black/40 uppercase tracking-wider">
                       <span>Patient</span>
                       <span>Service</span>
@@ -269,6 +321,8 @@ function DoctorAppointments() {
                           className="px-6 py-5 hover:bg-[#fafffc] transition"
                         >
                           <div className="lg:grid lg:grid-cols-[1.4fr_1.3fr_1fr_1fr_130px] lg:gap-4 lg:items-center">
+
+                            {/* Patient */}
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-full bg-[#e8f5ee] flex items-center justify-center">
                                 <UserRound
@@ -291,6 +345,7 @@ function DoctorAppointments() {
                               </div>
                             </div>
 
+                            {/* Service */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Service
@@ -301,12 +356,14 @@ function DoctorAppointments() {
                                   size={16}
                                   strokeWidth={1.8}
                                 />
+
                                 <span>
                                   {appointment.service_name || "—"}
                                 </span>
                               </div>
                             </div>
 
+                            {/* Time */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Time
@@ -336,6 +393,7 @@ function DoctorAppointments() {
                               </div>
                             </div>
 
+                            {/* Status */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Status
@@ -356,6 +414,7 @@ function DoctorAppointments() {
                               </span>
                             </div>
 
+                            {/* Action */}
                             <div className="mt-5 lg:mt-0">
                               {appointment.status === "BOOKED" ? (
                                 <button
