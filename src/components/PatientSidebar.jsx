@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -6,16 +6,41 @@ import {
   CalendarPlus,
   ListOrdered,
   HeartPulse,
+  Bell,
   Menu,
   X,
 } from "lucide-react";
+import api from "../services/api";
 
 function PatientSidebar() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const closeSidebar = () => {
     setSidebarOpen(false);
   };
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await api.get("/notifications/");
+
+        const notifications = Array.isArray(response.data)
+          ? response.data
+          : response.data.results || [];
+
+        const unreadCount = notifications.filter(
+          (notification) => !notification.is_read
+        ).length;
+
+        setNotificationCount(unreadCount);
+      } catch (error) {
+        console.error("Failed to fetch notifications:", error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl transition ${
@@ -102,7 +127,7 @@ function PatientSidebar() {
               </NavLink>
 
               <NavLink
-                to="/appointments"
+                to="/patient/appointments"
                 className={navLinkClass}
                 onClick={closeSidebar}
               >
@@ -114,6 +139,29 @@ function PatientSidebar() {
                 <span>
                   My Appointments
                 </span>
+              </NavLink>
+
+              <NavLink
+                to="/patient/notifications"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <Bell
+                  size={19}
+                  strokeWidth={1.8}
+                />
+
+                <span className="flex-1">
+                  Notifications
+                </span>
+
+                {notificationCount > 0 && (
+                  <span className="w-5 h-5 rounded-full bg-[#bfe8d0] text-[#27764d] text-[11px] font-bold flex items-center justify-center">
+                    {notificationCount > 9
+                      ? "9+"
+                      : notificationCount}
+                  </span>
+                )}
               </NavLink>
 
               <NavLink
