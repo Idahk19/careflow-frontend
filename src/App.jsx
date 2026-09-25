@@ -17,6 +17,7 @@ import DoctorAllAppointments from "./pages/DoctorAllappointments";
 import PatientDashboard from "./pages/PatientDashboard";
 import PatientAppointments from "./pages/PatientAppointments";
 import PatientNotifications from "./pages/PatientNotifications";
+import BookAppointment from "./pages/BookAppointment";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/patient/dashboard" element={<PatientDashboard />} />
         <Route path="/patient/appointments" element={<PatientAppointments />} />
         <Route path="/patient/notifications" element={<PatientNotifications />} />
+        <Route path="/appointments/book" element={<BookAppointment />} />
       </Routes>
     </BrowserRouter>
   );
