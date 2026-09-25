@@ -18,6 +18,7 @@ import PatientDashboard from "./pages/PatientDashboard";
 import PatientAppointments from "./pages/PatientAppointments";
 import PatientNotifications from "./pages/PatientNotifications";
 import BookAppointment from "./pages/BookAppointment";
+import MyQueue from "./pages/MyQueue";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <Route path="/patient/appointments" element={<PatientAppointments />} />
         <Route path="/patient/notifications" element={<PatientNotifications />} />
         <Route path="/appointments/book" element={<BookAppointment />} />
+        <Route path="/my-queue" element={<MyQueue />} />
       </Routes>
     </BrowserRouter>
   );
