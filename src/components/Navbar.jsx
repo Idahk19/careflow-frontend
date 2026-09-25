@@ -10,6 +10,7 @@ import {
   Info,
   Mail,
   HeartPulse,
+  Phone,
 } from "lucide-react";
 import { useState } from "react";
 import api from "../services/api";
@@ -151,20 +152,35 @@ function Navbar() {
                 </NavLink>
               )}
 
-              {isPatient && (
-                <NavLink
-                  to="/appointments/book"
-                  className={navLinkClass}
-                >
-                  <span className="flex items-center gap-2">
-                    <CalendarDays
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                    Book Appointment
-                  </span>
-                </NavLink>
-              )}
+             {isPatient && (
+  <>
+    <NavLink
+      to="/about"
+      className={navLinkClass}
+    >
+      <span className="flex items-center gap-2">
+        <Info
+          size={17}
+          strokeWidth={1.8}
+        />
+        About
+      </span>
+    </NavLink>
+
+    <NavLink
+      to="/contact"
+      className={navLinkClass}
+    >
+      <span className="flex items-center gap-2">
+        <Phone
+          size={17}
+          strokeWidth={1.8}
+        />
+        Contact
+      </span>
+    </NavLink>
+  </>
+)}
 
             </div>
 
