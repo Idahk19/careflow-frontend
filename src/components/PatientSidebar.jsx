@@ -140,6 +140,20 @@ function PatientSidebar() {
                   My Appointments
                 </span>
               </NavLink>
+              <NavLink
+                to="/patient/my-feedback"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <CalendarDays
+                  size={19}
+                  strokeWidth={1.8}
+                />
+
+                <span>
+                  Appointment feedback
+                </span>
+              </NavLink>
 
               <NavLink
                 to="/patient/notifications"

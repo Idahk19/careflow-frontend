@@ -19,6 +19,10 @@ import PatientAppointments from "./pages/PatientAppointments";
 import PatientNotifications from "./pages/PatientNotifications";
 import BookAppointment from "./pages/BookAppointment";
 import MyQueue from "./pages/MyQueue";
+import DoctorAppointmentFeedback from "./pages/DoctorAppointmentFeedback";
+import DoctorsFeedback from "./pages/DoctorsFeedback";
+import PatientFeedback from "./pages/PatientFeedback"
+
 
 function App() {
   return (
@@ -43,6 +47,15 @@ function App() {
         <Route path="/patient/notifications" element={<PatientNotifications />} />
         <Route path="/appointments/book" element={<BookAppointment />} />
         <Route path="/my-queue" element={<MyQueue />} />
+        <Route path="/doctor/appointments/:appointmentId/feedback" element={<DoctorAppointmentFeedback />}/>
+        <Route
+  path="/doctor/feedback"
+  element={<DoctorsFeedback />}
+/>
+<Route
+  path="/patient/my-feedback"
+  element={<PatientFeedback />}
+/>
       </Routes>
     </BrowserRouter>
   );

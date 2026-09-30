@@ -8,7 +8,9 @@ import {
   CheckCircle2,
   CircleDot,
   UserCheck,
+  MessageSquarePlus,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DoctorSidebar from "../components/DoctorSidebar";
 import api from "../services/api";
 
@@ -18,7 +20,8 @@ function DoctorAppointments() {
   const [checkingIn, setCheckingIn] = useState(null);
   const [error, setError] = useState("");
 
-  // Get today's date in YYYY-MM-DD format
+  const navigate = useNavigate();
+
   const getTodayDate = () => {
     const today = new Date();
 
@@ -29,23 +32,19 @@ function DoctorAppointments() {
     return `${year}-${month}-${day}`;
   };
 
-  // Fetch all doctor's appointments and filter to today
   const fetchAppointments = async () => {
     try {
       setLoading(true);
       setError("");
 
-      // Get ALL appointments for the logged-in doctor
       const response = await api.get("/appointments/doctor/today/");
 
       const allAppointments = Array.isArray(response.data)
         ? response.data
         : [];
 
-      // Get the current date from the browser
       const today = getTodayDate();
 
-      // Keep only appointments whose date is today
       const todaysAppointments = allAppointments.filter(
         (appointment) => appointment.date === today
       );
@@ -80,7 +79,6 @@ function DoctorAppointments() {
     }
   };
 
-  // Load appointments when page opens
   useEffect(() => {
     fetchAppointments();
   }, []);
@@ -94,7 +92,6 @@ function DoctorAppointments() {
         appointment: appointmentId,
       });
 
-      // Refresh today's appointments after check-in
       await fetchAppointments();
     } catch (error) {
       console.error("Check-in error:", error);
@@ -108,6 +105,10 @@ function DoctorAppointments() {
     } finally {
       setCheckingIn(null);
     }
+  };
+
+  const handleAddFeedback = (appointmentId) => {
+    navigate(`/doctor/appointments/${appointmentId}/feedback`);
   };
 
   const formatTime = (time) => {
@@ -172,7 +173,6 @@ function DoctorAppointments() {
       <main className="ml-0 lg:ml-64 min-h-screen">
         <div className="p-6 lg:p-10 max-w-7xl">
 
-          {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-black">
@@ -184,7 +184,6 @@ function DoctorAppointments() {
               </p>
             </div>
 
-            {/* Refresh Button */}
             <button
               type="button"
               onClick={fetchAppointments}
@@ -200,14 +199,12 @@ function DoctorAppointments() {
             </button>
           </div>
 
-          {/* Error */}
           {error && (
             <div className="mt-8 bg-red-50 text-red-600 p-4 rounded-xl">
               {error}
             </div>
           )}
 
-          {/* Loading */}
           {loading ? (
             <div className="mt-8 bg-white rounded-2xl border border-black/5 p-8">
               <p className="text-black/50">
@@ -216,10 +213,8 @@ function DoctorAppointments() {
             </div>
           ) : (
             <>
-              {/* Summary Cards */}
               <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Number of appointments */}
                 <div className="bg-[#bfe8d0] rounded-2xl p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -241,7 +236,6 @@ function DoctorAppointments() {
                   </div>
                 </div>
 
-                {/* Current date */}
                 <div className="bg-white rounded-2xl p-6 border border-black/5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -264,7 +258,6 @@ function DoctorAppointments() {
                 </div>
               </div>
 
-              {/* Today's Schedule */}
               <div className="mt-10">
                 <div className="flex items-center justify-between mb-5">
                   <div>
@@ -283,7 +276,6 @@ function DoctorAppointments() {
                   </span>
                 </div>
 
-                {/* No appointments */}
                 {appointments.length === 0 ? (
                   <div className="bg-white rounded-2xl border border-black/5 p-12 text-center">
                     <div className="w-14 h-14 mx-auto rounded-2xl bg-[#e8f5ee] flex items-center justify-center">
@@ -302,11 +294,9 @@ function DoctorAppointments() {
                     </p>
                   </div>
                 ) : (
-                  /* Appointments table */
                   <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
 
-                    {/* Table header */}
-                    <div className="hidden lg:grid grid-cols-[1.4fr_1.3fr_1fr_1fr_130px] gap-4 px-6 py-4 bg-[#f8fcfa] border-b border-black/5 text-xs font-semibold text-black/40 uppercase tracking-wider">
+                    <div className="hidden lg:grid grid-cols-[1.4fr_1.3fr_1fr_1fr_180px] gap-4 px-6 py-4 bg-[#f8fcfa] border-b border-black/5 text-xs font-semibold text-black/40 uppercase tracking-wider">
                       <span>Patient</span>
                       <span>Service</span>
                       <span>Time</span>
@@ -320,9 +310,8 @@ function DoctorAppointments() {
                           key={appointment.id}
                           className="px-6 py-5 hover:bg-[#fafffc] transition"
                         >
-                          <div className="lg:grid lg:grid-cols-[1.4fr_1.3fr_1fr_1fr_130px] lg:gap-4 lg:items-center">
+                          <div className="lg:grid lg:grid-cols-[1.4fr_1.3fr_1fr_1fr_180px] lg:gap-4 lg:items-center">
 
-                            {/* Patient */}
                             <div className="flex items-center gap-3">
                               <div className="w-11 h-11 rounded-full bg-[#e8f5ee] flex items-center justify-center">
                                 <UserRound
@@ -345,7 +334,6 @@ function DoctorAppointments() {
                               </div>
                             </div>
 
-                            {/* Service */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Service
@@ -363,7 +351,6 @@ function DoctorAppointments() {
                               </div>
                             </div>
 
-                            {/* Time */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Time
@@ -393,7 +380,6 @@ function DoctorAppointments() {
                               </div>
                             </div>
 
-                            {/* Status */}
                             <div className="mt-4 lg:mt-0">
                               <p className="lg:hidden text-xs text-black/40 mb-1">
                                 Status
@@ -414,7 +400,6 @@ function DoctorAppointments() {
                               </span>
                             </div>
 
-                            {/* Action */}
                             <div className="mt-5 lg:mt-0">
                               {appointment.status === "BOOKED" ? (
                                 <button
@@ -433,13 +418,38 @@ function DoctorAppointments() {
                                     ? "Checking In..."
                                     : "Check In"}
                                 </button>
-                              ) : appointment.status ===
-                                "CHECKED_IN" ? (
+                              ) : appointment.status === "CHECKED_IN" ? (
                                 <div className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#e8f5ee] text-green-700 text-sm font-semibold">
                                   <CheckCircle2 size={16} />
                                   Checked In
                                 </div>
-                              ) : (
+                              
+                            ) : appointment.status === "COMPLETED" ? (
+  appointment.has_feedback ? (
+    <button
+      type="button"
+      onClick={() =>
+        handleAddFeedback(appointment.id)
+      }
+      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#e8f5ee] text-green-700 border border-[#cdebd9] text-sm font-semibold hover:bg-[#dff2e7] transition"
+    >
+      <CheckCircle2 size={16} />
+      Feedback Added
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() =>
+        handleAddFeedback(appointment.id)
+      }
+      className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#bfe8d0] text-black text-sm font-semibold hover:bg-[#aee0c2] transition"
+    >
+      <MessageSquarePlus size={16} />
+      Add Appointment Feedback
+    </button>
+  )
+)
+                               : (
                                 <span className="text-sm text-black/40">
                                   —
                                 </span>

@@ -141,6 +141,20 @@ function DoctorSidebar() {
                   Today's Appointments
                 </span>
               </NavLink>
+              <NavLink
+                to="/doctor/feedback"
+                className={navLinkClass}
+                onClick={closeSidebar}
+              >
+                <CalendarDays
+                  size={19}
+                  strokeWidth={1.8}
+                />
+
+                <span>
+                  Feedback
+                </span>
+              </NavLink>
 
               <NavLink
                 to="/doctor/queue"
