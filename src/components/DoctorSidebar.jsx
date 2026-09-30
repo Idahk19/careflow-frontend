@@ -1,22 +1,15 @@
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   CalendarDays,
-  UserCheck,
   ListOrdered,
-  CircleCheck,
   UserRound,
-  LogOut,
   Menu,
   X,
-  History,
 } from "lucide-react";
-import api from "../services/api";
 
 function DoctorSidebar() {
-  const navigate = useNavigate();
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const user = JSON.parse(
@@ -30,8 +23,8 @@ function DoctorSidebar() {
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-3 px-4 py-3 rounded-xl transition ${
       isActive
-        ? "bg-[#bfe8d0] text-black font-semibold"
-        : "text-black/60 hover:bg-[#e8f5ee] hover:text-black"
+        ? "bg-[#9ee6bd] text-[#101915] font-semibold"
+        : "text-white/65 hover:bg-white/10 hover:text-[#9ee6bd]"
     }`;
 
   return (
@@ -39,7 +32,7 @@ function DoctorSidebar() {
       <button
         type="button"
         onClick={() => setSidebarOpen(true)}
-        className="lg:hidden fixed top-5 left-5 z-50 w-11 h-11 rounded-xl bg-white border border-black/5 shadow-sm flex items-center justify-center text-black"
+        className="lg:hidden fixed top-5 left-5 z-50 w-11 h-11 rounded-xl bg-[#101915] border border-white/10 shadow-sm flex items-center justify-center text-[#9ee6bd]"
       >
         <Menu size={22} />
       </button>
@@ -47,12 +40,12 @@ function DoctorSidebar() {
       {sidebarOpen && (
         <div
           onClick={closeSidebar}
-          className="lg:hidden fixed inset-0 z-40 bg-black/30"
+          className="lg:hidden fixed inset-0 z-40 bg-black/40"
         />
       )}
 
       <aside
-        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-white border-r border-black/5 transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 z-50 h-screen w-64 bg-[#101915] border-r border-white/10 transform transition-transform duration-300 ${
           sidebarOpen
             ? "translate-x-0"
             : "-translate-x-full lg:translate-x-0"
@@ -60,18 +53,26 @@ function DoctorSidebar() {
       >
         <div className="h-full flex flex-col">
 
-          <div className="h-20 px-6 border-b border-black/5 flex items-center">
+          <div className="h-20 px-6 border-b border-white/10 flex items-center">
 
             <div className="flex items-center justify-between w-full">
 
               <div className="flex items-center gap-3">
 
+                <div className="flex items-center gap-1">
+
+                  <div className="w-2.5 h-6 rounded-full bg-[#9ee6bd]"></div>
+
+                  <div className="w-2.5 h-4 rounded-full bg-[#c8f3d9]"></div>
+
+                </div>
+
                 <div>
-                  <h1 className="text-xl font-bold text-black">
+                  <h1 className="text-xl font-bold text-white">
                     CareFlow
                   </h1>
 
-                  <p className="text-[10px] text-black/50 tracking-widest uppercase">
+                  <p className="text-[10px] text-white/40 tracking-widest uppercase">
                     Doctor Portal
                   </p>
                 </div>
@@ -81,7 +82,7 @@ function DoctorSidebar() {
               <button
                 type="button"
                 onClick={closeSidebar}
-                className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-black/60 hover:bg-black/5 hover:text-black transition"
+                className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-white/60 hover:bg-white/10 hover:text-[#9ee6bd] transition"
               >
                 <X size={20} />
               </button>
@@ -92,8 +93,8 @@ function DoctorSidebar() {
 
           <div className="px-4 py-6 flex-1 overflow-y-auto">
 
-            <p className="px-4 mb-3 text-xs font-semibold text-black/40 uppercase tracking-wider">
-              Doctors activities
+            <p className="px-4 mb-3 text-xs font-semibold text-white/35 uppercase tracking-[0.18em]">
+              Doctor activities
             </p>
 
             <nav className="space-y-1">
@@ -127,6 +128,7 @@ function DoctorSidebar() {
                   All Appointments
                 </span>
               </NavLink>
+
               <NavLink
                 to="/doctor/appointments"
                 className={navLinkClass}
@@ -141,6 +143,7 @@ function DoctorSidebar() {
                   Today's Appointments
                 </span>
               </NavLink>
+
               <NavLink
                 to="/doctor/feedback"
                 className={navLinkClass}
@@ -175,18 +178,18 @@ function DoctorSidebar() {
 
           </div>
 
-          <div className="p-4 border-t border-black/5">
+          <div className="p-4 border-t border-white/10">
 
             <NavLink
               to="/profile"
               onClick={closeSidebar}
               className="block"
             >
-              <div className="bg-[#e8f5ee] rounded-2xl p-4 mb-3 hover:bg-[#dff1e7] transition">
+              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-3 hover:bg-white/10 transition">
 
                 <div className="flex items-center gap-3">
 
-                  <div className="w-10 h-10 rounded-full bg-[#bfe8d0] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#9ee6bd] flex items-center justify-center text-[#101915]">
                     <UserRound
                       size={19}
                       strokeWidth={1.8}
@@ -195,13 +198,13 @@ function DoctorSidebar() {
 
                   <div className="min-w-0">
 
-                    <p className="text-sm font-semibold text-black truncate">
+                    <p className="text-sm font-semibold text-white truncate">
                       {user?.first_name
                         ? `Dr. ${user.first_name}`
                         : user?.username}
                     </p>
 
-                    <p className="text-xs text-black/50">
+                    <p className="text-xs text-white/40">
                       My Profile
                     </p>
 
