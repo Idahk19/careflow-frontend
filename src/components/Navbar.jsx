@@ -88,7 +88,7 @@ function Navbar() {
   return (
     <header className="sticky top-0 z-50">
       <nav className="bg-[#e9f7ee]/95 dark:bg-[#101915]/95 backdrop-blur-xl transition-colors duration-300">
-        <div className="w-full px-3 sm:px-5 lg:px-6">
+        <div className="w-full pl-20 pr-3 sm:pl-20 sm:pr-5 lg:px-6">
           <div className="h-20 flex items-center justify-between">
 
             <Link
