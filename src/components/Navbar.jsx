@@ -1,42 +1,63 @@
 import { Link, NavLink } from "react-router-dom";
 import {
-  Home,
-  CalendarDays,
   UserRound,
-  LogIn,
   Menu,
   X,
   ChevronDown,
+  HeartPulse,
+  ArrowRight,
+  House,
   Info,
   Mail,
-  HeartPulse,
-  Phone,
+  Sun,
+  Moon,
+  LayoutDashboard,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import api from "../services/api";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const user = JSON.parse(localStorage.getItem("user"));
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem("theme") === "dark"
+  );
 
-  const isSignedIn = !!localStorage.getItem("access_token");
+  const [isSignedIn, setIsSignedIn] = useState(
+    !!localStorage.getItem("access_token")
+  );
+
+  const [user, setUser] = useState(() =>
+    JSON.parse(localStorage.getItem("user") || "null")
+  );
 
   const userRole = user?.role?.toUpperCase();
+  const isPatient = userRole === "PATIENT";
 
-  const isAdminOrStaff =
-    userRole === "ADMIN" ||
-    userRole === "STAFF";
+  const dashboardPath =
+    userRole === "PATIENT"
+      ? "/patient/dashboard"
+      : userRole === "STAFF"
+      ? "/doctor/dashboard"
+      : "/admin/dashboard";
 
-  const isPatient =
-    userRole === "PATIENT";
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", darkMode);
+  }, [darkMode]);
+
+  const toggleTheme = () => {
+    const nextTheme = darkMode ? "light" : "dark";
+
+    setDarkMode(!darkMode);
+    localStorage.setItem("theme", nextTheme);
+  };
 
   const navLinkClass = ({ isActive }) =>
-    `transition ${
+    `flex items-center gap-2 text-sm transition ${
       isActive
-        ? "text-black font-semibold"
-        : "text-black/60 hover:text-black"
+        ? "text-black dark:text-white font-semibold"
+        : "text-black/45 dark:text-white/55 hover:text-black dark:hover:text-white"
     }`;
 
   const handleLogout = async () => {
@@ -55,219 +76,195 @@ function Navbar() {
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("user");
 
+      setIsSignedIn(false);
+      setUser(null);
+      setProfileOpen(false);
       setMenuOpen(false);
+
       window.location.href = "/login";
     }
   };
 
   return (
     <header className="sticky top-0 z-50">
-      <nav className="bg-white/75 backdrop-blur-xl border-b border-black/5 shadow-sm">
-
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-
+      <nav className="bg-[#e9f7ee]/95 dark:bg-[#101915]/95 backdrop-blur-xl transition-colors duration-300">
+        <div className="w-full px-3 sm:px-5 lg:px-6">
           <div className="h-20 flex items-center justify-between">
 
-         <Link
-  to="/"
-  className="flex items-center gap-3"
-  onClick={() => {
-    setMenuOpen(false);
-    setProfileOpen(false);
-  }}
->
-  <div className="flex items-center gap-1">
-    <div className="w-2.5 h-6 rounded-full bg-[#8bcfa9]"></div>
-    <div className="w-2.5 h-4 rounded-full bg-[#bfe8d0]"></div>
-  </div>
+            <Link
+              to="/"
+              onClick={() => {
+                setMenuOpen(false);
+                setProfileOpen(false);
+              }}
+              className="flex items-center gap-3 group"
+            >
+              <div className="flex items-center gap-1">
+                <div className="w-2.5 h-6 rounded-full bg-[#9ee6bd] group-hover:h-7 transition-all"></div>
 
-  <div>
-    <h1 className="text-xl font-bold text-black">
-      CareFlow
-    </h1>
+                <div className="w-2.5 h-4 rounded-full bg-[#c8f3d9] group-hover:h-5 transition-all"></div>
+              </div>
 
-    <p className="text-[10px] text-black/50 tracking-widest uppercase">
-      Healthcare
-    </p>
-  </div>
-</Link>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight text-black dark:text-white transition-colors">
+                  CareFlow
+                </h1>
 
-            <div className="hidden md:flex items-center gap-8">
+                <p className="text-[9px] text-black/40 dark:text-white/40 tracking-[0.2em] uppercase transition-colors">
+                  Healthcare
+                </p>
+              </div>
+            </Link>
+
+            <div className="hidden md:flex items-center gap-9">
 
               <NavLink
                 to="/"
                 className={navLinkClass}
               >
-                <span className="flex items-center gap-2">
-                  <Home
-                    size={17}
-                    strokeWidth={1.8}
-                  />
-                  Home
-                </span>
+                <House
+                  size={16}
+                  strokeWidth={1.8}
+                />
+                Home
               </NavLink>
 
-              {!isSignedIn && (
-                <>
-                  <NavLink
-                    to="/about"
-                    className={navLinkClass}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Info
-                        size={17}
-                        strokeWidth={1.8}
-                      />
-                      About
-                    </span>
-                  </NavLink>
-
-                  <NavLink
-                    to="/contact"
-                    className={navLinkClass}
-                  >
-                    <span className="flex items-center gap-2">
-                      <Mail
-                        size={17}
-                        strokeWidth={1.8}
-                      />
-                      Contact
-                    </span>
-                  </NavLink>
-                </>
-              )}
-
-              {isAdminOrStaff && (
+              {isSignedIn && (
                 <NavLink
-                  to="/about"
+                  to={dashboardPath}
                   className={navLinkClass}
                 >
-                  <span className="flex items-center gap-2">
-                    <Info
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                    About
-                  </span>
+                  <LayoutDashboard
+                    size={16}
+                    strokeWidth={1.8}
+                  />
+                  My Dashboard
                 </NavLink>
               )}
 
-             {isPatient && (
-  <>
-    <NavLink
-      to="/about"
-      className={navLinkClass}
-    >
-      <span className="flex items-center gap-2">
-        <Info
-          size={17}
-          strokeWidth={1.8}
-        />
-        About
-      </span>
-    </NavLink>
+              <NavLink
+                to="/about"
+                className={navLinkClass}
+              >
+                <Info
+                  size={16}
+                  strokeWidth={1.8}
+                />
+                About
+              </NavLink>
 
-    <NavLink
-      to="/contact"
-      className={navLinkClass}
-    >
-      <span className="flex items-center gap-2">
-        <Phone
-          size={17}
-          strokeWidth={1.8}
-        />
-        Contact
-      </span>
-    </NavLink>
-  </>
-)}
+              {(!isSignedIn || isPatient) && (
+                <NavLink
+                  to="/contact"
+                  className={navLinkClass}
+                >
+                  <Mail
+                    size={16}
+                    strokeWidth={1.8}
+                  />
+                  Contact
+                </NavLink>
+              )}
 
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center gap-5">
+
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-black/60 hover:text-black hover:bg-black/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10 transition"
+                aria-label={
+                  darkMode
+                    ? "Switch to light mode"
+                    : "Switch to dark mode"
+                }
+              >
+                {darkMode ? (
+                  <Sun
+                    size={18}
+                    strokeWidth={1.8}
+                  />
+                ) : (
+                  <Moon
+                    size={18}
+                    strokeWidth={1.8}
+                  />
+                )}
+              </button>
 
               {!isSignedIn ? (
-                <>
+                <div className="flex items-center gap-7">
+
                   <Link
                     to="/login"
-                    className="flex items-center gap-2 px-4 py-2.5 text-sm font-semibold text-black hover:bg-[#e8f5ee] rounded-xl transition"
+                    className="text-sm font-medium text-black/60 dark:text-white/65 hover:text-black dark:hover:text-white transition"
                   >
-                    <LogIn
-                      size={18}
-                      strokeWidth={1.8}
-                    />
-                    Sign In
+                    Sign in
                   </Link>
 
                   <Link
                     to="/register"
-                    className="flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-xl text-sm font-semibold hover:bg-gray-800 transition"
+                    className="group flex items-center gap-3 text-sm font-semibold text-black dark:text-white"
                   >
-                    <UserRound
-                      size={18}
-                      strokeWidth={1.8}
-                    />
-                    Get Started
+                    Get started
+
+                    <span className="w-9 h-9 rounded-full bg-black dark:bg-[#9ee6bd] text-white dark:text-black flex items-center justify-center group-hover:translate-x-1 transition">
+                      <ArrowRight size={16} />
+                    </span>
                   </Link>
-                </>
+
+                </div>
               ) : (
                 <div className="relative">
 
                   <button
                     type="button"
                     onClick={() =>
-                      setProfileOpen(
-                        (previous) => !previous
-                      )
+                      setProfileOpen((previous) => !previous)
                     }
-                    className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-[#e8f5ee] transition"
+                    className="flex items-center gap-3 group"
                   >
-                    <div className="w-9 h-9 rounded-full bg-[#bfe8d0] flex items-center justify-center">
+                    <div className="w-9 h-9 rounded-full bg-[#9ee6bd] flex items-center justify-center group-hover:bg-[#83dca9] transition">
                       <UserRound
-                        size={19}
+                        size={18}
                         strokeWidth={1.8}
-                        className="text-black"
                       />
                     </div>
 
-                    <div className="text-left">
-                      <p className="text-sm font-semibold text-black">
-                        {user?.first_name ||
-                          user?.username}
+                    <div className="text-left hidden lg:block">
+                      <p className="text-sm font-semibold text-black dark:text-white">
+                        {user?.first_name || user?.username}
                       </p>
 
-                      <p className="text-xs text-black/50">
-                        {user?.role === "PATIENT"
+                      <p className="text-[11px] text-black/40 dark:text-white/40">
+                        {userRole === "PATIENT"
                           ? "Patient"
-                          : user?.role === "STAFF"
+                          : userRole === "STAFF"
                           ? "Staff"
                           : "Admin"}
                       </p>
                     </div>
 
                     <ChevronDown
-                      size={16}
+                      size={15}
                       strokeWidth={1.8}
-                      className={`transition-transform ${
-                        profileOpen
-                          ? "rotate-180"
-                          : ""
+                      className={`text-black/40 dark:text-white/40 transition-transform ${
+                        profileOpen ? "rotate-180" : ""
                       }`}
                     />
                   </button>
 
                   {profileOpen && (
-                    <div className="absolute right-0 mt-3 w-56 bg-white rounded-2xl shadow-xl border border-black/5 p-2">
+                    <div className="absolute right-0 top-12 w-56 bg-white dark:bg-[#18221d] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)] border border-black/5 dark:border-white/10 p-2">
 
                       <Link
                         to="/profile"
-                        onClick={() =>
-                          setProfileOpen(false)
-                        }
-                        className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee] transition"
+                        onClick={() => setProfileOpen(false)}
+                        className="flex items-center gap-3 px-4 py-3 rounded-xl text-black dark:text-white hover:bg-[#e8f5ee] dark:hover:bg-[#223129] transition"
                       >
                         <UserRound
-                          size={18}
+                          size={17}
                           strokeWidth={1.8}
                         />
 
@@ -279,13 +276,11 @@ function Navbar() {
                       {isPatient && (
                         <Link
                           to="/my-care"
-                          onClick={() =>
-                            setProfileOpen(false)
-                          }
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee] transition"
+                          onClick={() => setProfileOpen(false)}
+                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-black dark:text-white hover:bg-[#e8f5ee] dark:hover:bg-[#223129] transition"
                         >
                           <HeartPulse
-                            size={18}
+                            size={17}
                             strokeWidth={1.8}
                           />
 
@@ -295,18 +290,19 @@ function Navbar() {
                         </Link>
                       )}
 
-                      <div className="border-t border-black/5 my-2"></div>
+                      <div className="h-px bg-black/5 dark:bg-white/10 my-2"></div>
 
                       <button
                         type="button"
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition text-sm font-medium"
+                        className="w-full text-left px-4 py-3 rounded-xl text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition text-sm font-medium"
                       >
                         Sign Out
                       </button>
 
                     </div>
                   )}
+
                 </div>
               )}
 
@@ -315,11 +311,9 @@ function Navbar() {
             <button
               type="button"
               onClick={() =>
-                setMenuOpen(
-                  (previous) => !previous
-                )
+                setMenuOpen((previous) => !previous)
               }
-              className="md:hidden p-2 text-black hover:bg-[#e8f5ee] rounded-xl transition"
+              className="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
               aria-label={
                 menuOpen
                   ? "Close menu"
@@ -327,160 +321,161 @@ function Navbar() {
               }
             >
               {menuOpen ? (
-                <X size={24} />
+                <X size={22} />
               ) : (
-                <Menu size={24} />
+                <Menu size={22} />
               )}
             </button>
 
           </div>
 
           {menuOpen && (
-            <div className="md:hidden border-t border-black/5 py-5">
+            <div className="md:hidden border-t border-black/5 dark:border-white/10 py-5">
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col">
 
                 <NavLink
                   to="/"
-                  onClick={() =>
-                    setMenuOpen(false)
-                  }
+                  onClick={() => setMenuOpen(false)}
                   className={navLinkClass}
                 >
-                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                    <Home
-                      size={18}
+                  <div className="py-3 flex items-center gap-3">
+                    <House
+                      size={17}
                       strokeWidth={1.8}
                     />
                     Home
                   </div>
                 </NavLink>
 
-                {!isSignedIn && (
-                  <>
-                    <NavLink
-                      to="/about"
-                      onClick={() =>
-                        setMenuOpen(false)
-                      }
-                      className={navLinkClass}
-                    >
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                        <Info
-                          size={18}
-                          strokeWidth={1.8}
-                        />
-                        About
-                      </div>
-                    </NavLink>
-
-                    <NavLink
-                      to="/contact"
-                      onClick={() =>
-                        setMenuOpen(false)
-                      }
-                      className={navLinkClass}
-                    >
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                        <Mail
-                          size={18}
-                          strokeWidth={1.8}
-                        />
-                        Contact
-                      </div>
-                    </NavLink>
-                  </>
-                )}
-
-                {isAdminOrStaff && (
-                  <NavLink
-                    to="/about"
-                    onClick={() =>
-                      setMenuOpen(false)
-                    }
-                    className={navLinkClass}
-                  >
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                      <Info
-                        size={18}
-                        strokeWidth={1.8}
-                      />
-                      About
-                    </div>
-                  </NavLink>
-                )}
-
-                {isPatient && (
-                  <NavLink
-                    to="/appointments/book"
-                    onClick={() =>
-                      setMenuOpen(false)
-                    }
-                    className={navLinkClass}
-                  >
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
-                      <CalendarDays
-                        size={18}
-                        strokeWidth={1.8}
-                      />
-                      Book Appointment
-                    </div>
-                  </NavLink>
-                )}
-
                 {isSignedIn && (
+                  <NavLink
+                    to={dashboardPath}
+                    onClick={() => setMenuOpen(false)}
+                    className={navLinkClass}
+                  >
+                    <div className="py-3 flex items-center gap-3">
+                      <LayoutDashboard
+                        size={17}
+                        strokeWidth={1.8}
+                      />
+                      My Dashboard
+                    </div>
+                  </NavLink>
+                )}
+
+                <NavLink
+                  to="/about"
+                  onClick={() => setMenuOpen(false)}
+                  className={navLinkClass}
+                >
+                  <div className="py-3 flex items-center gap-3">
+                    <Info
+                      size={17}
+                      strokeWidth={1.8}
+                    />
+                    About
+                  </div>
+                </NavLink>
+
+                {(!isSignedIn || isPatient) && (
+                  <NavLink
+                    to="/contact"
+                    onClick={() => setMenuOpen(false)}
+                    className={navLinkClass}
+                  >
+                    <div className="py-3 flex items-center gap-3">
+                      <Mail
+                        size={17}
+                        strokeWidth={1.8}
+                      />
+                      Contact
+                    </div>
+                  </NavLink>
+                )}
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  className="flex items-center gap-3 py-3 text-sm text-black/60 dark:text-white/60"
+                >
+                  {darkMode ? (
+                    <Sun
+                      size={17}
+                      strokeWidth={1.8}
+                    />
+                  ) : (
+                    <Moon
+                      size={17}
+                      strokeWidth={1.8}
+                    />
+                  )}
+
+                  {darkMode
+                    ? "Light mode"
+                    : "Dark mode"}
+                </button>
+
+                {isSignedIn ? (
                   <>
+
                     <NavLink
                       to="/profile"
-                      onClick={() =>
-                        setMenuOpen(false)
-                      }
+                      onClick={() => setMenuOpen(false)}
                       className={navLinkClass}
                     >
-                      <div className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#e8f5ee]">
+                      <div className="py-3 flex items-center gap-3">
                         <UserRound
-                          size={18}
+                          size={17}
                           strokeWidth={1.8}
                         />
                         My Profile
                       </div>
                     </NavLink>
 
+                    {isPatient && (
+                      <NavLink
+                        to="/my-care"
+                        onClick={() => setMenuOpen(false)}
+                        className={navLinkClass}
+                      >
+                        <div className="py-3 flex items-center gap-3">
+                          <HeartPulse
+                            size={17}
+                            strokeWidth={1.8}
+                          />
+                          My Care
+                        </div>
+                      </NavLink>
+                    )}
+
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="text-left px-4 py-3 rounded-xl text-red-600 hover:bg-red-50 transition font-medium"
+                      className="text-left py-3 text-sm font-medium text-red-600 dark:text-red-400"
                     >
                       Sign Out
                     </button>
-                  </>
-                )}
 
-                {!isSignedIn && (
-                  <div className="border-t border-black/5 mt-3 pt-4 flex flex-col gap-2">
+                  </>
+                ) : (
+                  <div className="border-t border-black/5 dark:border-white/10 mt-3 pt-5 flex flex-col gap-4">
 
                     <Link
                       to="/login"
-                      onClick={() =>
-                        setMenuOpen(false)
-                      }
-                      className="flex items-center justify-center gap-2 px-4 py-3 text-center font-semibold text-black rounded-xl hover:bg-[#e8f5ee] transition"
+                      onClick={() => setMenuOpen(false)}
+                      className="text-sm font-semibold text-black dark:text-white"
                     >
-                      <LogIn
-                        size={18}
-                        strokeWidth={1.8}
-                      />
-                      Sign In
+                      Sign in
                     </Link>
 
                     <Link
                       to="/register"
-                      onClick={() =>
-                        setMenuOpen(false)
-                      }
-                      className="px-4 py-3 text-center bg-black text-white rounded-xl font-semibold hover:bg-gray-800 transition"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center justify-center gap-3 w-full py-3.5 bg-black dark:bg-[#9ee6bd] text-white dark:text-black rounded-full text-sm font-semibold"
                     >
-                      Get Started
+                      Get started
+                      <ArrowRight size={17} />
                     </Link>
 
                   </div>

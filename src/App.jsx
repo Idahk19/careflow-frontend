@@ -21,14 +21,17 @@ import BookAppointment from "./pages/BookAppointment";
 import MyQueue from "./pages/MyQueue";
 import DoctorAppointmentFeedback from "./pages/DoctorAppointmentFeedback";
 import DoctorsFeedback from "./pages/DoctorsFeedback";
-import PatientFeedback from "./pages/PatientFeedback"
-
+import PatientFeedback from "./pages/PatientFeedback";
+import Home from "./pages/Home";
+import About from "./pages/About"
 
 function App() {
   return (
     <BrowserRouter>
     <Navbar />
       <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -59,6 +62,7 @@ function App() {
       </Routes>
     </BrowserRouter>
   );
+  
 }
 
 export default App;
