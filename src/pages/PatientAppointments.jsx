@@ -4,12 +4,15 @@ import {
   CalendarDays,
   Clock3,
   Filter,
-  History,
   Search,
   Stethoscope,
   UserRound,
   X,
-  ArrowRight,
+  Trash2,
+  Ban,
+  RotateCcw,
+  MessageSquareText,
+  Check,
 } from "lucide-react";
 import PatientSidebar from "../components/PatientSidebar";
 import api from "../services/api";
@@ -25,6 +28,15 @@ function PatientAppointments() {
   const [dateFilter, setDateFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [viewFilter, setViewFilter] = useState("all");
+
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+  const [rescheduleAppointment, setRescheduleAppointment] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [selectedSlot, setSelectedSlot] = useState("");
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [rescheduleSaving, setRescheduleSaving] = useState(false);
+  const [rescheduleError, setRescheduleError] = useState("");
 
   const fetchAppointments = async () => {
     try {
@@ -57,13 +69,261 @@ function PatientAppointments() {
     fetchAppointments();
   }, []);
 
+  const handleCancel = async (appointmentId) => {
+    try {
+      setError("");
+
+      await api.patch(
+        `/appointments/${appointmentId}/cancel/`,
+        {
+          status: "CANCELLED",
+        }
+      );
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error(
+        "Failed to cancel appointment:",
+        error.response?.data || error
+      );
+
+      setError(
+        error.response?.data?.detail ||
+          error.response?.data?.status?.[0] ||
+          error.response?.data?.slot?.[0] ||
+          "Failed to cancel appointment."
+      );
+    }
+  };
+
+  const handleDelete = async (appointmentId) => {
+    try {
+      setError("");
+
+      await api.delete(
+        `/appointments/${appointmentId}/delete/`
+      );
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error(
+        "Failed to delete appointment:",
+        error.response?.data || error
+      );
+
+      setError(
+        error.response?.data?.detail ||
+          "Failed to delete appointment."
+      );
+    }
+  };
+
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+
+    tomorrow.setDate(
+      tomorrow.getDate() + 1
+    );
+
+    return tomorrow
+      .toISOString()
+      .split("T")[0];
+  };
+
+  const getTodayDate = () => {
+    return new Date()
+      .toISOString()
+      .split("T")[0];
+  };
+
+  const openRescheduleModal = (appointment) => {
+    const today = getTodayDate();
+
+    const appointmentDate =
+      appointment.appointment_date;
+
+    const initialDate =
+      appointment.status === "MISSED" ||
+      !appointmentDate ||
+      appointmentDate < today
+        ? getTomorrowDate()
+        : appointmentDate;
+
+    setRescheduleAppointment(appointment);
+    setRescheduleDate(initialDate);
+    setSelectedSlot("");
+    setAvailableSlots([]);
+    setRescheduleError("");
+    setShowRescheduleModal(true);
+
+    loadAvailableSlots(
+      appointment,
+      initialDate
+    );
+  };
+
+  const closeRescheduleModal = () => {
+    if (rescheduleSaving) {
+      return;
+    }
+
+    setShowRescheduleModal(false);
+    setRescheduleAppointment(null);
+    setRescheduleDate("");
+    setSelectedSlot("");
+    setAvailableSlots([]);
+    setRescheduleError("");
+  };
+
+  const loadAvailableSlots = async (
+    appointment,
+    date
+  ) => {
+    if (
+      !appointment?.doctor ||
+      !appointment?.service ||
+      !date
+    ) {
+      setAvailableSlots([]);
+
+      setRescheduleError(
+        "Unable to load time slots because the doctor or service information is missing."
+      );
+
+      return;
+    }
+
+    try {
+      setSlotsLoading(true);
+      setRescheduleError("");
+      setSelectedSlot("");
+
+      const response = await api.get(
+        "/appointments/slots/",
+        {
+          params: {
+            doctor: appointment.doctor,
+            service: appointment.service,
+            date,
+          },
+        }
+      );
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.results || [];
+
+      setAvailableSlots(data);
+
+      if (data.length === 0) {
+        setRescheduleError(
+          "There are no available time slots for this date."
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Failed to load available time slots:",
+        error.response?.data || error
+      );
+
+      setAvailableSlots([]);
+
+      setRescheduleError(
+        error.response?.data?.date?.[0] ||
+          error.response?.data?.doctor?.[0] ||
+          error.response?.data?.service?.[0] ||
+          error.response?.data?.error ||
+          "Failed to load available time slots."
+      );
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const handleRescheduleDateChange = (event) => {
+    const date = event.target.value;
+
+    setRescheduleDate(date);
+
+    if (rescheduleAppointment) {
+      loadAvailableSlots(
+        rescheduleAppointment,
+        date
+      );
+    }
+  };
+
+  const handleRescheduleSubmit = async () => {
+    if (!selectedSlot) {
+      setRescheduleError(
+        "Please select a time slot."
+      );
+
+      return;
+    }
+
+    try {
+      setRescheduleSaving(true);
+      setRescheduleError("");
+
+      const payload = {
+        slot: Number(selectedSlot),
+      };
+
+      if (
+        rescheduleAppointment.status ===
+        "MISSED"
+      ) {
+        payload.status = "BOOKED";
+      }
+
+      await api.patch(
+        `/appointments/${rescheduleAppointment.id}/update/`,
+        payload
+      );
+
+      setShowRescheduleModal(false);
+      setRescheduleAppointment(null);
+      setRescheduleDate("");
+      setSelectedSlot("");
+      setAvailableSlots([]);
+
+      await fetchAppointments();
+    } catch (error) {
+      console.error(
+        "Failed to reschedule appointment:",
+        error.response?.data || error
+      );
+
+      setRescheduleError(
+        error.response?.data?.detail ||
+          error.response?.data?.slot?.[0] ||
+          error.response?.data?.status?.[0] ||
+          "Failed to reschedule appointment."
+      );
+    } finally {
+      setRescheduleSaving(false);
+    }
+  };
+
+  const handleViewFeedback = () => {
+    navigate("/patient/my-feedback");
+  };
+
   const formatTime = (time) => {
-    if (!time) return "—";
+    if (!time) {
+      return "—";
+    }
 
     const [hours, minutes] = time.split(":");
+
     const date = new Date();
 
-    date.setHours(Number(hours), Number(minutes), 0);
+    date.setHours(
+      Number(hours),
+      Number(minutes),
+      0
+    );
 
     return date.toLocaleTimeString([], {
       hour: "numeric",
@@ -72,9 +332,13 @@ function PatientAppointments() {
   };
 
   const formatDate = (date) => {
-    if (!date) return "—";
+    if (!date) {
+      return "—";
+    }
 
-    return new Date(`${date}T00:00:00`).toLocaleDateString([], {
+    return new Date(
+      `${date}T00:00:00`
+    ).toLocaleDateString([], {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -83,22 +347,31 @@ function PatientAppointments() {
   };
 
   const getTimeRange = (appointment) => {
-    if (!appointment.start_time || !appointment.end_time) {
+    if (
+      !appointment.start_time ||
+      !appointment.end_time
+    ) {
       return "—";
     }
 
-    return `${formatTime(appointment.start_time)} - ${formatTime(
+    return `${formatTime(
+      appointment.start_time
+    )} - ${formatTime(
       appointment.end_time
     )}`;
   };
 
   const formatStatus = (status) => {
-    if (!status) return "Unknown";
+    if (!status) {
+      return "Unknown";
+    }
 
     return status
       .toLowerCase()
       .replace(/_/g, " ")
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
+      .replace(/\b\w/g, (letter) =>
+        letter.toUpperCase()
+      );
   };
 
   const getStatusClass = (status) => {
@@ -115,69 +388,79 @@ function PatientAppointments() {
       case "CANCELLED":
         return "bg-[#f8eeee] text-[#9a4b4b]";
 
+      case "MISSED":
+        return "bg-[#fff4e5] text-[#9a641f]";
+
       default:
         return "bg-[#f1f5f3] text-black/60";
     }
   };
 
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
+
+  today.setHours(
+    0,
+    0,
+    0,
+    0
+  );
 
   const upcomingAppointments = useMemo(() => {
-    return appointments.filter((appointment) => {
-      if (
-        appointment.status === "CANCELLED" ||
-        appointment.status === "COMPLETED"
-      ) {
-        return false;
+    return appointments.filter(
+      (appointment) => {
+        if (
+          appointment.status === "CANCELLED" ||
+          appointment.status === "COMPLETED" ||
+          appointment.status === "MISSED"
+        ) {
+          return false;
+        }
+
+        if (!appointment.appointment_date) {
+          return false;
+        }
+
+        const appointmentDate =
+          new Date(
+            `${appointment.appointment_date}T00:00:00`
+          );
+
+        return appointmentDate >= today;
       }
-
-      if (!appointment.appointment_date) {
-        return false;
-      }
-
-      const appointmentDate = new Date(
-        `${appointment.appointment_date}T00:00:00`
-      );
-
-      return appointmentDate >= today;
-    });
+    );
   }, [appointments]);
 
   const pastAppointments = useMemo(() => {
-    return appointments.filter((appointment) => {
-      if (
-        appointment.status === "COMPLETED" ||
-        appointment.status === "CHECKED_IN" ||
-        appointment.status === "CANCELLED"
-      ) {
-        return false;
+    return appointments.filter(
+      (appointment) => {
+        if (
+          appointment.status === "COMPLETED" ||
+          appointment.status === "CHECKED_IN" ||
+          appointment.status === "CANCELLED"
+        ) {
+          return false;
+        }
+
+        if (!appointment.appointment_date) {
+          return false;
+        }
+
+        const appointmentDate =
+          new Date(
+            `${appointment.appointment_date}T00:00:00`
+          );
+
+        return (
+          appointmentDate < today ||
+          appointment.status === "MISSED"
+        );
       }
-
-      if (!appointment.appointment_date) {
-        return false;
-      }
-
-      const appointmentDate = new Date(
-        `${appointment.appointment_date}T00:00:00`
-      );
-
-      return appointmentDate < today;
-    });
-  }, [appointments]);
-
-  const services = useMemo(() => {
-    return [
-      ...new Set(
-        appointments
-          .map((appointment) => appointment.service_name)
-          .filter(Boolean)
-      ),
-    ].sort();
+    );
   }, [appointments]);
 
   const filteredAppointments = useMemo(() => {
-    const searchValue = search.toLowerCase().trim();
+    const searchValue =
+      search.toLowerCase().trim();
 
     return appointments
       .filter((appointment) => {
@@ -192,24 +475,30 @@ function PatientAppointments() {
 
         const matchesDate =
           !dateFilter ||
-          appointment.appointment_date === dateFilter;
+          appointment.appointment_date ===
+            dateFilter;
 
         const matchesStatus =
           !statusFilter ||
-          appointment.status === statusFilter;
+          appointment.status ===
+            statusFilter;
 
         let matchesView = true;
 
         if (viewFilter === "upcoming") {
-          matchesView = upcomingAppointments.some(
-            (item) => item.id === appointment.id
-          );
+          matchesView =
+            upcomingAppointments.some(
+              (item) =>
+                item.id === appointment.id
+            );
         }
 
         if (viewFilter === "past") {
-          matchesView = pastAppointments.some(
-            (item) => item.id === appointment.id
-          );
+          matchesView =
+            pastAppointments.some(
+              (item) =>
+                item.id === appointment.id
+            );
         }
 
         return (
@@ -221,11 +510,15 @@ function PatientAppointments() {
       })
       .sort((a, b) => {
         const dateA = new Date(
-          `${a.appointment_date}T${a.start_time || "00:00"}`
+          `${a.appointment_date}T${
+            a.start_time || "00:00"
+          }`
         );
 
         const dateB = new Date(
-          `${b.appointment_date}T${b.start_time || "00:00"}`
+          `${b.appointment_date}T${
+            b.start_time || "00:00"
+          }`
         );
 
         return dateB - dateA;
@@ -253,23 +546,32 @@ function PatientAppointments() {
     statusFilter ||
     viewFilter !== "all";
 
-  const totalAppointments = appointments.length;
+  const totalAppointments =
+    appointments.length;
 
-  const bookedCount = appointments.filter(
-    (appointment) => appointment.status === "BOOKED"
-  ).length;
+  const checkedInCount =
+    appointments.filter(
+      (appointment) =>
+        appointment.status === "CHECKED_IN"
+    ).length;
 
-  const checkedInCount = appointments.filter(
-    (appointment) => appointment.status === "CHECKED_IN"
-  ).length;
+  const completedCount =
+    appointments.filter(
+      (appointment) =>
+        appointment.status === "COMPLETED"
+    ).length;
 
-  const completedCount = appointments.filter(
-    (appointment) => appointment.status === "COMPLETED"
-  ).length;
+  const cancelledCount =
+    appointments.filter(
+      (appointment) =>
+        appointment.status === "CANCELLED"
+    ).length;
 
-  const cancelledCount = appointments.filter(
-    (appointment) => appointment.status === "CANCELLED"
-  ).length;
+  const missedCount =
+    appointments.filter(
+      (appointment) =>
+        appointment.status === "MISSED"
+    ).length;
 
   return (
     <div className="min-h-screen bg-[#f8faf9]">
@@ -299,175 +601,117 @@ function PatientAppointments() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+          {error && (
+            <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 flex items-center justify-between gap-4">
+              <span>{error}</span>
 
+              <button
+                type="button"
+                onClick={() => setError("")}
+                className="shrink-0"
+              >
+                <X size={17} />
+              </button>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
             <div className="bg-white rounded-2xl border border-black/5 p-5">
-              <p className="text-sm text-black/50">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
                 Total
               </p>
 
-              <p className="text-2xl font-bold text-black mt-2">
+              <p className="text-2xl font-bold mt-2">
                 {totalAppointments}
               </p>
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5">
-              <p className="text-sm text-black/50">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
                 Upcoming
               </p>
 
-              <p className="text-2xl font-bold text-black mt-2">
+              <p className="text-2xl font-bold mt-2">
                 {upcomingAppointments.length}
               </p>
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5">
-              <p className="text-sm text-black/50">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
                 Checked In
               </p>
 
-              <p className="text-2xl font-bold text-black mt-2">
+              <p className="text-2xl font-bold mt-2">
                 {checkedInCount}
               </p>
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5">
-              <p className="text-sm text-black/50">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
                 Completed
               </p>
 
-              <p className="text-2xl font-bold text-black mt-2">
+              <p className="text-2xl font-bold mt-2">
                 {completedCount}
               </p>
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5">
-              <p className="text-sm text-black/50">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
+                Missed
+              </p>
+
+              <p className="text-2xl font-bold mt-2">
+                {missedCount}
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-black/5 p-5">
+              <p className="text-xs uppercase tracking-[0.14em] text-black/40">
                 Cancelled
               </p>
 
-              <p className="text-2xl font-bold text-black mt-2">
+              <p className="text-2xl font-bold mt-2">
                 {cancelledCount}
               </p>
             </div>
-
           </div>
 
-          <div className="bg-white rounded-2xl border border-black/5 p-5 mb-6">
+          <div className="bg-white rounded-2xl border border-black/5 p-4 mb-6">
+            <div className="flex flex-col lg:flex-row gap-3">
 
-            <div className="flex items-center justify-between mb-5">
+              <div className="relative flex-1">
+                <Search
+                  size={18}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-black/35"
+                />
+
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                  placeholder="Search doctor or service..."
+                  className="w-full h-11 rounded-xl border border-black/10 bg-[#f8faf9] pl-11 pr-4 text-sm outline-none focus:border-[#9ee6bd]"
+                />
+              </div>
 
               <div className="flex items-center gap-2">
                 <Filter
-                  size={18}
-                  className="text-black/50"
+                  size={17}
+                  className="text-black/40"
                 />
-
-                <h2 className="font-semibold text-black">
-                  Filter Appointments
-                </h2>
-              </div>
-
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  className="flex items-center gap-2 text-sm text-black/50 hover:text-black transition"
-                >
-                  <X size={16} />
-                  Clear filters
-                </button>
-              )}
-
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-
-              <div>
-                <label className="block text-xs font-medium text-black/50 mb-2">
-                  Doctor or Service
-                </label>
-
-                <div className="relative">
-                  <Search
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40"
-                  />
-
-                  <input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Search appointments"
-                    className="w-full h-11 pl-10 pr-4 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-black/50 mb-2">
-                  Date
-                </label>
-
-                <div className="relative">
-                  <CalendarDays
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-black/40 pointer-events-none"
-                  />
-
-                  <input
-                    type="date"
-                    value={dateFilter}
-                    onChange={(e) => setDateFilter(e.target.value)}
-                    className="w-full h-11 pl-10 pr-3 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-black/50 mb-2">
-                  Status
-                </label>
-
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full h-11 px-3 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40"
-                >
-                  <option value="">
-                    All statuses
-                  </option>
-
-                  <option value="BOOKED">
-                    Booked
-                  </option>
-
-                  <option value="CHECKED_IN">
-                    Checked In
-                  </option>
-
-                  <option value="COMPLETED">
-                    Completed
-                  </option>
-
-                  <option value="CANCELLED">
-                    Cancelled
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-black/50 mb-2">
-                  View
-                </label>
 
                 <select
                   value={viewFilter}
-                  onChange={(e) => setViewFilter(e.target.value)}
-                  className="w-full h-11 px-3 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40"
+                  onChange={(event) =>
+                    setViewFilter(event.target.value)
+                  }
+                  className="h-11 rounded-xl border border-black/10 bg-[#f8faf9] px-3 text-sm outline-none focus:border-[#9ee6bd]"
                 >
                   <option value="all">
-                    All appointments
+                    All Appointments
                   </option>
 
                   <option value="upcoming">
@@ -480,231 +724,430 @@ function PatientAppointments() {
                 </select>
               </div>
 
+              <input
+                type="date"
+                value={dateFilter}
+                onChange={(event) =>
+                  setDateFilter(event.target.value)
+                }
+                className="h-11 rounded-xl border border-black/10 bg-[#f8faf9] px-3 text-sm outline-none focus:border-[#9ee6bd]"
+              />
+
+              <select
+                value={statusFilter}
+                onChange={(event) =>
+                  setStatusFilter(event.target.value)
+                }
+                className="h-11 rounded-xl border border-black/10 bg-[#f8faf9] px-3 text-sm outline-none focus:border-[#9ee6bd]"
+              >
+                <option value="">
+                  All Statuses
+                </option>
+
+                <option value="BOOKED">
+                  Booked
+                </option>
+
+                <option value="CHECKED_IN">
+                  Checked In
+                </option>
+
+                <option value="COMPLETED">
+                  Completed
+                </option>
+
+                <option value="MISSED">
+                  Missed
+                </option>
+
+                <option value="CANCELLED">
+                  Cancelled
+                </option>
+              </select>
+
+              {hasFilters && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="h-11 px-4 rounded-xl bg-[#101915] text-white text-sm font-medium hover:bg-black transition"
+                >
+                  Clear
+                </button>
+              )}
             </div>
           </div>
 
           <div className="bg-white rounded-2xl border border-black/5 overflow-hidden">
-
-            <div className="px-5 sm:px-6 py-5 border-b border-black/5">
-              <h2 className="font-semibold text-black">
-                Appointments
-              </h2>
-
-              <p className="text-sm text-black/50 mt-1">
-                Showing {filteredAppointments.length} of{" "}
-                {appointments.length} appointments
-              </p>
-            </div>
-
             {loading ? (
-              <div className="p-12 text-center">
-                <div className="w-8 h-8 border-2 border-[#bfe8d0] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-
-                <p className="text-sm text-black/50">
-                  Loading your appointments...
-                </p>
-              </div>
-            ) : error ? (
-              <div className="p-12 text-center">
-                <p className="text-sm text-red-600 mb-4">
-                  {error}
-                </p>
-
-                <button
-                  type="button"
-                  onClick={fetchAppointments}
-                  className="px-5 py-2.5 rounded-xl bg-[#bfe8d0] text-black text-sm font-medium hover:bg-[#aee0c2] transition"
-                >
-                  Try Again
-                </button>
+              <div className="p-12 text-center text-sm text-black/45">
+                Loading your appointments...
               </div>
             ) : filteredAppointments.length === 0 ? (
               <div className="p-12 text-center">
+                <CalendarDays
+                  size={36}
+                  className="mx-auto text-black/20"
+                  strokeWidth={1.5}
+                />
 
-                <div className="w-14 h-14 rounded-2xl bg-[#e8f5ee] flex items-center justify-center mx-auto mb-4">
-                  {hasFilters ? (
-                    <Search
-                      size={25}
-                      className="text-[#27764d]"
-                      strokeWidth={1.7}
-                    />
-                  ) : (
-                    <CalendarDays
-                      size={25}
-                      className="text-[#27764d]"
-                      strokeWidth={1.7}
-                    />
-                  )}
-                </div>
-
-                <h3 className="font-semibold text-black">
+                <h3 className="mt-4 font-semibold text-black">
                   No appointments found
                 </h3>
 
-                <p className="text-sm text-black/50 mt-1">
-                  {hasFilters
-                    ? "Try changing or clearing your filters."
-                    : "You don't have any appointments yet."}
+                <p className="text-sm text-black/45 mt-1">
+                  Try changing your filters or book a new appointment.
                 </p>
-
-                {hasFilters ? (
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="mt-4 text-sm font-medium text-[#27764d] hover:underline"
-                  >
-                    Clear filters
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => navigate("/appointments/book")}
-                    className="mt-5 px-5 py-2.5 rounded-xl bg-[#bfe8d0] text-black text-sm font-medium hover:bg-[#aee0c2] transition"
-                  >
-                    Book Appointment
-                  </button>
-                )}
-
               </div>
             ) : (
               <div className="overflow-x-auto">
-
-                <table className="w-full">
-
+                <table className="w-full min-w-[1000px]">
                   <thead>
-                    <tr className="border-b border-black/5">
-
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
+                    <tr className="border-b border-black/5 text-left">
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
                         Doctor
                       </th>
 
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
                         Service
                       </th>
 
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
                         Date
                       </th>
 
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
                         Time
                       </th>
 
-                      <th className="text-left px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
                         Status
                       </th>
 
-                      <th className="text-right px-6 py-4 text-xs font-semibold text-black/40 uppercase tracking-wide">
-                        Action
+                      <th className="px-6 py-4 text-xs uppercase tracking-[0.12em] text-black/40 font-medium">
+                        Actions
                       </th>
-
                     </tr>
                   </thead>
 
                   <tbody>
+                    {filteredAppointments.map(
+                      (appointment) => (
+                        <tr
+                          key={appointment.id}
+                          className="border-b border-black/5 last:border-b-0"
+                        >
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
+                                <UserRound
+                                  size={18}
+                                  className="text-[#27764d]"
+                                />
+                              </div>
 
-                    {filteredAppointments.map((appointment) => (
-                      <tr
-                        key={appointment.id}
-                        className="border-b border-black/5 last:border-b-0 hover:bg-[#f8faf9] transition"
-                      >
-
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-3">
-
-                            <div className="w-10 h-10 rounded-xl bg-[#e8f5ee] flex items-center justify-center flex-shrink-0">
-                              <UserRound
-                                size={18}
-                                className="text-[#27764d]"
-                              />
-                            </div>
-
-                            <div>
-                              <p className="font-medium text-black">
+                              <span className="font-medium text-black">
                                 {appointment.doctor_name ||
                                   "Doctor"}
-                              </p>
-
-                              <p className="text-sm text-black/45 mt-1">
-                                CareFlow appointment
-                              </p>
+                              </span>
                             </div>
+                          </td>
 
-                          </div>
-                        </td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2 text-sm text-black/65">
+                              <Stethoscope
+                                size={16}
+                                className="text-black/35"
+                              />
 
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2">
+                              {appointment.service_name ||
+                                "Service"}
+                            </div>
+                          </td>
 
-                            <Stethoscope
-                              size={16}
-                              className="text-black/40"
-                            />
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2 text-sm text-black/65">
+                              <CalendarDays
+                                size={16}
+                                className="text-black/35"
+                              />
 
-                            <span className="text-sm text-black/70">
-                              {appointment.service_name || "—"}
+                              {formatDate(
+                                appointment.appointment_date
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2 text-sm text-black/65">
+                              <Clock3
+                                size={16}
+                                className="text-black/35"
+                              />
+
+                              {getTimeRange(
+                                appointment
+                              )}
+                            </div>
+                          </td>
+
+                          <td className="px-6 py-5">
+                            <span
+                              className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${getStatusClass(
+                                appointment.status
+                              )}`}
+                            >
+                              {formatStatus(
+                                appointment.status
+                              )}
                             </span>
+                          </td>
 
-                          </div>
-                        </td>
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-2 flex-wrap">
 
-                        <td className="px-6 py-5 text-sm text-black/70">
-                          {formatDate(
-                            appointment.appointment_date
-                          )}
-                        </td>
+                              {appointment.status ===
+                                "COMPLETED" && (
+                                <button
+                                  type="button"
+                                  onClick={
+                                    handleViewFeedback
+                                  }
+                                  className="inline-flex items-center gap-2 rounded-xl bg-[#e8f5ee] px-3 py-2 text-xs font-medium text-[#27764d] hover:bg-[#bfe8d0] transition"
+                                >
+                                  <MessageSquareText
+                                    size={15}
+                                  />
 
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-2 text-sm text-black/70">
-                            <Clock3
-                              size={16}
-                              className="text-black/40"
-                            />
+                                  View Feedback
+                                </button>
+                              )}
 
-                            {getTimeRange(appointment)}
-                          </div>
-                        </td>
+                              {(
+                                appointment.status ===
+                                  "BOOKED" ||
+                                appointment.status ===
+                                  "MISSED"
+                              ) && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    openRescheduleModal(
+                                      appointment
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-2 rounded-xl bg-[#101915] px-3 py-2 text-xs font-medium text-white hover:bg-black transition"
+                                >
+                                  <RotateCcw
+                                    size={15}
+                                  />
 
-                        <td className="px-6 py-5">
-                          <span
-                            className={`inline-flex px-3 py-1.5 rounded-full text-xs font-medium ${getStatusClass(
-                              appointment.status
-                            )}`}
-                          >
-                            {formatStatus(appointment.status)}
-                          </span>
-                        </td>
+                                  Reschedule
+                                </button>
+                              )}
 
-                        <td className="px-6 py-5 text-right">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(
-                                `/appointments/${appointment.id}`
-                              )
-                            }
-                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#eef7f1] text-[#27764d] text-sm font-medium hover:bg-[#dff3e6] transition"
-                          >
-                            View
-                            <ArrowRight size={15} />
-                          </button>
-                        </td>
+                              {appointment.status ===
+                                "BOOKED" && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleCancel(
+                                      appointment.id
+                                    )
+                                  }
+                                  className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-black/65 hover:bg-[#f8eeee] hover:text-[#9a4b4b] transition"
+                                >
+                                  <Ban
+                                    size={15}
+                                  />
 
-                      </tr>
-                    ))}
+                                  Cancel
+                                </button>
+                              )}
 
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleDelete(
+                                    appointment.id
+                                  )
+                                }
+                                className="inline-flex items-center gap-2 rounded-xl border border-black/10 px-3 py-2 text-xs font-medium text-black/65 hover:bg-[#f8eeee] hover:text-[#9a4b4b] transition"
+                              >
+                                <Trash2
+                                  size={15}
+                                />
+
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    )}
                   </tbody>
-
                 </table>
-
               </div>
             )}
-
           </div>
         </div>
       </main>
+
+      {showRescheduleModal &&
+        rescheduleAppointment && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4 py-6">
+            <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden">
+
+              <div className="flex items-center justify-between px-6 py-5 border-b border-black/5">
+                <div>
+                  <h2 className="text-xl font-bold text-black">
+                    Reschedule Appointment
+                  </h2>
+
+                  <p className="text-sm text-black/45 mt-1">
+                    Choose a new date and available time.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={
+                    closeRescheduleModal
+                  }
+                  disabled={rescheduleSaving}
+                  className="w-10 h-10 rounded-xl flex items-center justify-center text-black/45 hover:bg-black/5 hover:text-black transition disabled:opacity-40"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+
+                <div className="rounded-2xl bg-[#f5faf7] border border-[#e8f5ee] p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#bfe8d0] flex items-center justify-center shrink-0">
+                      <Stethoscope
+                        size={18}
+                      />
+                    </div>
+
+                    <div>
+                      <p className="font-semibold text-black">
+                        {rescheduleAppointment.doctor_name}
+                      </p>
+
+                      <p className="text-sm text-black/50 mt-1">
+                        {rescheduleAppointment.service_name}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    New Date
+                  </label>
+
+                  <input
+                    type="date"
+                    value={rescheduleDate}
+                    min={getTodayDate()}
+                    onChange={
+                      handleRescheduleDateChange
+                    }
+                    disabled={rescheduleSaving}
+                    className="w-full h-12 rounded-xl border border-black/10 bg-white px-4 text-sm outline-none focus:border-[#9ee6bd]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-black mb-2">
+                    Available Time
+                  </label>
+
+                  {slotsLoading ? (
+                    <div className="h-12 rounded-xl bg-[#f8faf9] border border-black/5 flex items-center px-4 text-sm text-black/45">
+                      Loading available time slots...
+                    </div>
+                  ) : (
+                    <select
+                      value={selectedSlot}
+                      onChange={(event) =>
+                        setSelectedSlot(
+                          event.target.value
+                        )
+                      }
+                      disabled={
+                        rescheduleSaving ||
+                        availableSlots.length === 0
+                      }
+                      className="w-full h-12 rounded-xl border border-black/10 bg-white px-4 text-sm outline-none focus:border-[#9ee6bd] disabled:bg-[#f8faf9] disabled:text-black/40"
+                    >
+                      <option value="">
+                        Select an available time
+                      </option>
+
+                      {availableSlots.map(
+                        (slot) => (
+                          <option
+                            key={slot.id}
+                            value={slot.id}
+                          >
+                            {slot.label ||
+                              `${formatTime(
+                                slot.start_time
+                              )} - ${formatTime(
+                                slot.end_time
+                              )}`}
+                          </option>
+                        )
+                      )}
+                    </select>
+                  )}
+                </div>
+
+                {rescheduleError && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {rescheduleError}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={
+                      closeRescheduleModal
+                    }
+                    disabled={rescheduleSaving}
+                    className="h-11 px-5 rounded-xl border border-black/10 text-sm font-medium text-black/65 hover:bg-black/5 transition disabled:opacity-40"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={
+                      handleRescheduleSubmit
+                    }
+                    disabled={
+                      rescheduleSaving ||
+                      slotsLoading ||
+                      !selectedSlot
+                    }
+                    className="h-11 px-5 rounded-xl bg-[#101915] text-white text-sm font-medium hover:bg-black transition disabled:opacity-40 inline-flex items-center gap-2"
+                  >
+                    <Check size={16} />
+
+                    {rescheduleSaving
+                      ? "Rescheduling..."
+                      : "Confirm Reschedule"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
     </div>
   );
 }
 
-export default PatientAppointments;
+export default PatientAppointments;        
