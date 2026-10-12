@@ -9,20 +9,14 @@ import {
   House,
   Info,
   Mail,
-  Sun,
-  Moon,
   LayoutDashboard,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../services/api";
 
 function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem("theme") === "dark"
-  );
 
   const [isSignedIn, setIsSignedIn] = useState(
     !!localStorage.getItem("access_token")
@@ -39,19 +33,8 @@ function Navbar() {
     userRole === "PATIENT"
       ? "/patient/dashboard"
       : userRole === "STAFF"
-      ? "/doctor/dashboard"
-      : "/admin/dashboard";
-
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", darkMode);
-  }, [darkMode]);
-
-  const toggleTheme = () => {
-    const nextTheme = darkMode ? "light" : "dark";
-
-    setDarkMode(!darkMode);
-    localStorage.setItem("theme", nextTheme);
-  };
+        ? "/doctor/dashboard"
+        : "/admin/dashboard";
 
   const navLinkClass = ({ isActive }) =>
     `flex items-center gap-2 text-sm transition ${
@@ -90,7 +73,6 @@ function Navbar() {
       <nav className="bg-[#e9f7ee]/95 dark:bg-[#101915]/95 backdrop-blur-xl transition-colors duration-300">
         <div className="w-full pl-20 pr-3 sm:pl-20 sm:pr-5 lg:px-6">
           <div className="h-20 flex items-center justify-between">
-
             <Link
               to="/"
               onClick={() => {
@@ -117,15 +99,8 @@ function Navbar() {
             </Link>
 
             <div className="hidden md:flex items-center gap-9">
-
-              <NavLink
-                to="/"
-                className={navLinkClass}
-              >
-                <House
-                  size={16}
-                  strokeWidth={1.8}
-                />
+              <NavLink to="/" className={navLinkClass}>
+                <House size={16} strokeWidth={1.8} />
                 Home
               </NavLink>
 
@@ -134,68 +109,27 @@ function Navbar() {
                   to={dashboardPath}
                   className={navLinkClass}
                 >
-                  <LayoutDashboard
-                    size={16}
-                    strokeWidth={1.8}
-                  />
+                  <LayoutDashboard size={16} strokeWidth={1.8} />
                   My Dashboard
                 </NavLink>
               )}
 
-              <NavLink
-                to="/about"
-                className={navLinkClass}
-              >
-                <Info
-                  size={16}
-                  strokeWidth={1.8}
-                />
+              <NavLink to="/about" className={navLinkClass}>
+                <Info size={16} strokeWidth={1.8} />
                 About
               </NavLink>
 
               {(!isSignedIn || isPatient) && (
-                <NavLink
-                  to="/contact"
-                  className={navLinkClass}
-                >
-                  <Mail
-                    size={16}
-                    strokeWidth={1.8}
-                  />
+                <NavLink to="/contact" className={navLinkClass}>
+                  <Mail size={16} strokeWidth={1.8} />
                   Contact
                 </NavLink>
               )}
-
             </div>
 
             <div className="hidden md:flex items-center gap-5">
-
-              <button
-                type="button"
-                onClick={toggleTheme}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-black/60 hover:text-black hover:bg-black/5 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/10 transition"
-                aria-label={
-                  darkMode
-                    ? "Switch to light mode"
-                    : "Switch to dark mode"
-                }
-              >
-                {darkMode ? (
-                  <Sun
-                    size={18}
-                    strokeWidth={1.8}
-                  />
-                ) : (
-                  <Moon
-                    size={18}
-                    strokeWidth={1.8}
-                  />
-                )}
-              </button>
-
               {!isSignedIn ? (
                 <div className="flex items-center gap-7">
-
                   <Link
                     to="/login"
                     className="text-sm font-medium text-black/60 dark:text-white/65 hover:text-black dark:hover:text-white transition"
@@ -213,11 +147,9 @@ function Navbar() {
                       <ArrowRight size={16} />
                     </span>
                   </Link>
-
                 </div>
               ) : (
                 <div className="relative">
-
                   <button
                     type="button"
                     onClick={() =>
@@ -226,10 +158,7 @@ function Navbar() {
                     className="flex items-center gap-3 group"
                   >
                     <div className="w-9 h-9 rounded-full bg-[#9ee6bd] flex items-center justify-center group-hover:bg-[#83dca9] transition">
-                      <UserRound
-                        size={18}
-                        strokeWidth={1.8}
-                      />
+                      <UserRound size={18} strokeWidth={1.8} />
                     </div>
 
                     <div className="text-left hidden lg:block">
@@ -241,8 +170,8 @@ function Navbar() {
                         {userRole === "PATIENT"
                           ? "Patient"
                           : userRole === "STAFF"
-                          ? "Staff"
-                          : "Admin"}
+                            ? "Staff"
+                            : "Admin"}
                       </p>
                     </div>
 
@@ -257,16 +186,12 @@ function Navbar() {
 
                   {profileOpen && (
                     <div className="absolute right-0 top-12 w-56 bg-white dark:bg-[#18221d] rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] dark:shadow-[0_20px_60px_rgba(0,0,0,0.35)] border border-black/5 dark:border-white/10 p-2">
-
                       <Link
                         to="/profile"
                         onClick={() => setProfileOpen(false)}
                         className="flex items-center gap-3 px-4 py-3 rounded-xl text-black dark:text-white hover:bg-[#e8f5ee] dark:hover:bg-[#223129] transition"
                       >
-                        <UserRound
-                          size={17}
-                          strokeWidth={1.8}
-                        />
+                        <UserRound size={17} strokeWidth={1.8} />
 
                         <span className="text-sm font-medium">
                           My Profile
@@ -279,10 +204,7 @@ function Navbar() {
                           onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-3 px-4 py-3 rounded-xl text-black dark:text-white hover:bg-[#e8f5ee] dark:hover:bg-[#223129] transition"
                         >
-                          <HeartPulse
-                            size={17}
-                            strokeWidth={1.8}
-                          />
+                          <HeartPulse size={17} strokeWidth={1.8} />
 
                           <span className="text-sm font-medium">
                             My Care
@@ -299,13 +221,10 @@ function Navbar() {
                       >
                         Sign Out
                       </button>
-
                     </div>
                   )}
-
                 </div>
               )}
-
             </div>
 
             <button
@@ -314,36 +233,22 @@ function Navbar() {
                 setMenuOpen((previous) => !previous)
               }
               className="md:hidden w-10 h-10 flex items-center justify-center rounded-full text-black dark:text-white hover:bg-black/5 dark:hover:bg-white/10 transition"
-              aria-label={
-                menuOpen
-                  ? "Close menu"
-                  : "Open menu"
-              }
+              aria-label={menuOpen ? "Close menu" : "Open menu"}
             >
-              {menuOpen ? (
-                <X size={22} />
-              ) : (
-                <Menu size={22} />
-              )}
+              {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
-
           </div>
 
           {menuOpen && (
             <div className="md:hidden border-t border-black/5 dark:border-white/10 py-5">
-
               <div className="flex flex-col">
-
                 <NavLink
                   to="/"
                   onClick={() => setMenuOpen(false)}
                   className={navLinkClass}
                 >
                   <div className="py-3 flex items-center gap-3">
-                    <House
-                      size={17}
-                      strokeWidth={1.8}
-                    />
+                    <House size={17} strokeWidth={1.8} />
                     Home
                   </div>
                 </NavLink>
@@ -355,10 +260,7 @@ function Navbar() {
                     className={navLinkClass}
                   >
                     <div className="py-3 flex items-center gap-3">
-                      <LayoutDashboard
-                        size={17}
-                        strokeWidth={1.8}
-                      />
+                      <LayoutDashboard size={17} strokeWidth={1.8} />
                       My Dashboard
                     </div>
                   </NavLink>
@@ -370,10 +272,7 @@ function Navbar() {
                   className={navLinkClass}
                 >
                   <div className="py-3 flex items-center gap-3">
-                    <Info
-                      size={17}
-                      strokeWidth={1.8}
-                    />
+                    <Info size={17} strokeWidth={1.8} />
                     About
                   </div>
                 </NavLink>
@@ -385,50 +284,21 @@ function Navbar() {
                     className={navLinkClass}
                   >
                     <div className="py-3 flex items-center gap-3">
-                      <Mail
-                        size={17}
-                        strokeWidth={1.8}
-                      />
+                      <Mail size={17} strokeWidth={1.8} />
                       Contact
                     </div>
                   </NavLink>
                 )}
 
-                <button
-                  type="button"
-                  onClick={toggleTheme}
-                  className="flex items-center gap-3 py-3 text-sm text-black/60 dark:text-white/60"
-                >
-                  {darkMode ? (
-                    <Sun
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                  ) : (
-                    <Moon
-                      size={17}
-                      strokeWidth={1.8}
-                    />
-                  )}
-
-                  {darkMode
-                    ? "Light mode"
-                    : "Dark mode"}
-                </button>
-
                 {isSignedIn ? (
                   <>
-
                     <NavLink
                       to="/profile"
                       onClick={() => setMenuOpen(false)}
                       className={navLinkClass}
                     >
                       <div className="py-3 flex items-center gap-3">
-                        <UserRound
-                          size={17}
-                          strokeWidth={1.8}
-                        />
+                        <UserRound size={17} strokeWidth={1.8} />
                         My Profile
                       </div>
                     </NavLink>
@@ -440,10 +310,7 @@ function Navbar() {
                         className={navLinkClass}
                       >
                         <div className="py-3 flex items-center gap-3">
-                          <HeartPulse
-                            size={17}
-                            strokeWidth={1.8}
-                          />
+                          <HeartPulse size={17} strokeWidth={1.8} />
                           My Care
                         </div>
                       </NavLink>
@@ -456,11 +323,9 @@ function Navbar() {
                     >
                       Sign Out
                     </button>
-
                   </>
                 ) : (
                   <div className="border-t border-black/5 dark:border-white/10 mt-3 pt-5 flex flex-col gap-4">
-
                     <Link
                       to="/login"
                       onClick={() => setMenuOpen(false)}
@@ -477,15 +342,11 @@ function Navbar() {
                       Get started
                       <ArrowRight size={17} />
                     </Link>
-
                   </div>
                 )}
-
               </div>
-
             </div>
           )}
-
         </div>
       </nav>
     </header>
