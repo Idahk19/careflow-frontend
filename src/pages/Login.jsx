@@ -22,70 +22,66 @@ function Login() {
   };
 
   const handleSubmit = async (event) => {
-  event.preventDefault();
+    event.preventDefault();
 
-  setLoading(true);
-  setError("");
-  setSuccess("");
+    setLoading(true);
+    setError("");
+    setSuccess("");
 
-  try {
-    const response = await api.post(
-      "/accounts/login/",
-      formData
-    );
+    try {
+      const response = await api.post(
+        "/accounts/login/",
+        formData
+      );
 
-    const { access, refresh, user } = response.data;
+      const { access, refresh, user } = response.data;
 
-    localStorage.setItem("access_token", access);
-    localStorage.setItem("refresh_token", refresh);
-    localStorage.setItem("user", JSON.stringify(user));
+      localStorage.setItem("access_token", access);
+      localStorage.setItem("refresh_token", refresh);
+      localStorage.setItem("user", JSON.stringify(user));
 
-    if (user.role === "ADMIN") {
-      window.location.href = "/admin/dashboard";
-      return;
-    }
-
-    if (user.role === "PATIENT") {
-      window.location.href = "/patient/dashboard";
-      return;
-    }
-
-    if (user.role === "STAFF") {
-      window.location.href = "/doctor/dashboard";
-      return;
-    }
-
-    setSuccess(
-      `Welcome back, ${user.first_name || user.username}!`
-    );
-
-  } catch (error) {
-    console.error(error);
-
-    if (error.response) {
-      if (error.response.status === 401) {
-        setError("Invalid username or password.");
-      } else {
-        setError(
-          error.response.data?.error ||
-          "Login failed. Please try again."
-        );
+      if (user.role === "ADMIN") {
+        window.location.href = "/admin/dashboard";
+        return;
       }
-    } else {
-      setError("Could not connect to the server.");
+
+      if (user.role === "PATIENT") {
+        window.location.href = "/patient/dashboard";
+        return;
+      }
+
+      if (user.role === "STAFF") {
+        window.location.href = "/doctor/dashboard";
+        return;
+      }
+
+      setSuccess(
+        `Welcome back, ${user.first_name || user.username}!`
+      );
+    } catch (error) {
+      console.error(error);
+
+      if (error.response) {
+        if (error.response.status === 401) {
+          setError("Invalid username or password.");
+        } else {
+          setError(
+            error.response.data?.error ||
+              "Login failed. Please try again."
+          );
+        }
+      } else {
+        setError("Could not connect to the server.");
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-[#e8f5ee] flex items-center justify-center px-6 py-10">
-
       <div className="w-full max-w-5xl grid md:grid-cols-2 bg-white rounded-3xl shadow-2xl overflow-hidden">
-
         <div className="bg-[#bfe8d0] p-10 md:p-14 flex flex-col justify-center min-h-[500px]">
-
           <div className="mb-10">
             <p className="text-black text-sm font-semibold tracking-widest uppercase">
               CareFlow
@@ -103,11 +99,9 @@ function Login() {
           <p className="mt-6 text-black/60 text-sm">
             Simple healthcare. Better care. One place.
           </p>
-
         </div>
 
         <div className="bg-white p-10 md:p-14 flex flex-col justify-center">
-
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-black">
               Sign in
@@ -119,7 +113,6 @@ function Login() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
-
             <div>
               <label
                 htmlFor="username"
@@ -149,7 +142,6 @@ function Login() {
               </label>
 
               <div className="relative">
-
                 <input
                   id="password"
                   name="password"
@@ -179,7 +171,15 @@ function Login() {
                     <Eye size={20} strokeWidth={1.8} />
                   )}
                 </button>
+              </div>
 
+              <div className="flex justify-end mt-3">
+                <Link
+                  to="/forgot-password"
+                  className="text-sm font-semibold text-[#4f9f70] hover:text-black transition"
+                >
+                  Forgot password?
+                </Link>
               </div>
             </div>
 
@@ -202,7 +202,6 @@ function Login() {
             >
               {loading ? "Signing in..." : "Sign In"}
             </button>
-
           </form>
 
           <p className="mt-8 text-center text-sm text-gray-500">
@@ -214,11 +213,8 @@ function Login() {
               Create one
             </Link>
           </p>
-
         </div>
-
       </div>
-
     </div>
   );
 }
