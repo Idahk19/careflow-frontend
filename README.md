@@ -2,15 +2,15 @@
 
 CareFlow is a full-stack hospital appointment and patient queue management system designed to simplify appointment scheduling, patient check-in, queue tracking, and consultation management.
 
-The platform connects patients, doctors, and administrators through a centralized system that improves patient flow, reduces unnecessary waiting, and makes hospital operations more organized.
+The platform connects patients, doctors, and administrators through a centralized system that improves patient appointments queue flow, reduces unnecessary and uncertain waiting and makes hospital operations more organized.
 
 ## Problem Statement
 
-Traditional hospital appointment systems often focus on scheduling without providing an integrated way to manage patient check-in, queue positions, consultation progress, and waiting times. This can lead to long waiting periods, inefficient patient flow, and difficulties managing daily appointments.
+Traditional hospital appointment systems often focus on scheduling without providing an integrated way to manage patient check-in, queue positions, consultation progress, and waiting times. This can lead to long waiting periods, uncertain waiting times, inefficient patient flow, and difficulties managing daily appointments.
 
 ## Solution
 
-CareFlow integrates appointment scheduling, patient check-in, queue management, consultation tracking, and in-app notifications into one platform. Role-based access ensures that patients, doctors, and administrators can access the features relevant to their responsibilities.
+CareFlow integrates appointment scheduling, patient check-in, queue management, consultation tracking, and in-app notifications into one platform, reducing unneccessary and uncertain waiting. It also improves the appointment management by doctors.Role-based access ensures that patients, doctors, and administrators can access the features relevant to their responsibilities.
 
 ## Key Features
 
@@ -25,7 +25,7 @@ CareFlow integrates appointment scheduling, patient check-in, queue management, 
 - Receive queue numbers after check-in
 - Track queue positions and patients ahead
 - View estimated waiting times
-- Receive in-app notifications about queue progress and consultation turns
+- Receive in-app and sms notifications about queue progress and consultation turns
 
 ### Doctor Features
 
@@ -215,7 +215,6 @@ Typical configuration includes:
 - Allowed hosts
 - Other required application settings
 
-Never commit your `.env` file or production credentials to GitHub.
 
 #### 4. Configure the Database
 
@@ -238,8 +237,6 @@ Start the Django development server:
 ```bash
 python manage.py runserver
 ```
-
-The backend will typically be available at `http://127.0.0.1:8000/`.
 
 #### 5. Set Up the Frontend
 
@@ -265,14 +262,6 @@ npm run dev
 
 Open the local frontend URL displayed by Vite in your browser.
 
-### Configuration Notes
-
-- Ensure the frontend API URL points to the correct backend address.
-- Configure the database connection before running migrations.
-- Verify that the backend's CORS settings allow requests from the frontend origin.
-- Use environment variables for sensitive configuration.
-- Refer to the existing project settings for the exact environment variable names and directory structure.
-
 ## API Overview
 
 The backend exposes RESTful API endpoints for the application's main functionality.
@@ -289,37 +278,8 @@ The backend exposes RESTful API endpoints for the application's main functionali
 | Services | Managing hospital services |
 | Administration | Dashboard statistics and appointment oversight |
 
-The exact endpoint paths depend on the Django URL configuration.
-
-Authenticated requests use JWT access tokens in the authorization header. Protected endpoints enforce the permissions configured by the backend.
-
-The Django REST Framework Browsable API and Postman can be used to inspect and test available endpoints.
-
-## Authentication and Security
-
-CareFlow uses JSON Web Tokens through Django REST Framework Simple JWT to authenticate API requests.
-
-The authentication workflow includes:
-
-1. The user registers or logs in.
-2. The backend validates the user's credentials.
-3. The backend returns authentication tokens and relevant user information.
-4. The frontend includes the access token in authenticated API requests.
-5. The backend validates tokens and applies the appropriate permissions.
-
-Role-based access control separates patient, doctor, and administrator functionality.
-
-Production deployments should use secure configuration, appropriate token handling, restricted CORS origins, valid allowed hosts, and `DEBUG=False`.
 
 ## Testing
-
-### Backend Testing
-
-Run the Django automated test suite:
-
-```bash
-python manage.py test
-```
 
 ### API Testing
 
@@ -336,55 +296,17 @@ Use Postman or the Django REST Framework Browsable API to test:
 - Consultation completion
 - Notification creation and retrieval
 
-### Frontend Testing
+## Project View
 
-Start the development server:
+### Patient Dashboard
+![CareFlow Patient Dashboard](src/assets/screenshots/patients.png)
 
-```bash
-npm run dev
-```
+### Admin Dashboard
+![CareFlow Admin Dashboard](src/assets/screenshots/admin.png)
 
-Create a production build:
+### Doctor Dashboard
+![CareFlow Doctor Dashboard](src/assets/screenshots/doctors.png)
 
-```bash
-npm run build
-```
-
-Preview the production build locally:
-
-```bash
-npm run preview
-```
-
-## Deployment
-
-CareFlow supports separate frontend and backend deployments.
-
-### Backend Deployment
-
-The Django backend can be deployed to a Python-compatible hosting platform such as Render.
-
-Deployment requirements include:
-
-- Configure production environment variables.
-- Connect a PostgreSQL database.
-- Set `DEBUG=False`.
-- Configure `ALLOWED_HOSTS`.
-- Configure CORS for the deployed frontend.
-- Apply database migrations.
-- Configure static file handling.
-- Use a production WSGI server such as Gunicorn.
-
-### Frontend Deployment
-
-The React frontend can be deployed to a static hosting platform such as Vercel.
-
-Before deployment:
-
-- Configure the production API base URL.
-- Install dependencies and verify the production build.
-- Ensure the backend permits requests from the deployed frontend domain.
-- Verify that application routes work correctly after deployment.
 
 ## Future Improvements
 
@@ -392,7 +314,6 @@ Potential improvements for future versions include:
 
 - Appointment reminders before scheduled visits
 - More accurate waiting-time predictions using historical consultation data
-- Live queue updates without manual page refreshes
 - Enhanced analytics for hospital administrators
 - Improved accessibility and mobile responsiveness
 
@@ -407,8 +328,4 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 Full-Stack Developer
 
 - GitHub: [@Idahk19](https://github.com/Idahk19)
-- Repository: [CareFlow](https://github.com/Idahk19/care-flow)
-
-## Acknowledgements
-
-CareFlow was developed as a software project to explore full-stack web development, REST API design, authentication, appointment scheduling, and patient queue management.
+- Repository: [CareFlow](https://github.com/Idahk19/careflow-frontend)
