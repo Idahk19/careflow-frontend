@@ -303,19 +303,6 @@ function Navbar() {
                       </div>
                     </NavLink>
 
-                    {isPatient && (
-                      <NavLink
-                        to="/my-care"
-                        onClick={() => setMenuOpen(false)}
-                        className={navLinkClass}
-                      >
-                        <div className="py-3 flex items-center gap-3">
-                          <HeartPulse size={17} strokeWidth={1.8} />
-                          My Care
-                        </div>
-                      </NavLink>
-                    )}
-
                     <button
                       type="button"
                       onClick={handleLogout}
