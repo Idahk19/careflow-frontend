@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   UserRound,
   LockKeyhole,
@@ -7,10 +8,13 @@ import {
   Save,
   KeyRound,
   ShieldCheck,
+  ArrowLeft,
 } from "lucide-react";
 import api from "../services/api";
 
 function Profile() {
+  const navigate = useNavigate();
+
   const [profile, setProfile] = useState({
     username: "",
     email: "",
@@ -62,6 +66,15 @@ function Profile() {
       localStorage.setItem("user", JSON.stringify(response.data));
     } catch (error) {
       console.error("Failed to load profile:", error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
       setProfileError("Unable to load your profile.");
     } finally {
       setLoading(false);
@@ -115,9 +128,19 @@ function Profile() {
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      setProfileMessage("Your profile has been updated successfully.");
+      setProfileMessage(
+        "Your profile has been updated successfully."
+      );
     } catch (error) {
       console.error("Profile update failed:", error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
 
       const errors = error.response?.data;
 
@@ -187,6 +210,14 @@ function Profile() {
     } catch (error) {
       console.error("Password change failed:", error);
 
+      if (error.response?.status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        window.location.href = "/login";
+        return;
+      }
+
       const data = error.response?.data;
 
       if (data?.error) {
@@ -226,15 +257,25 @@ function Profile() {
   return (
     <div className="min-h-screen bg-[#f5faf7] px-5 py-8 sm:px-8 lg:px-12">
       <div className="max-w-5xl mx-auto">
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+            } else {
+              navigate("/dashboard");
+            }
+          }}
+          className="mb-6 inline-flex items-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2.5 text-sm font-semibold text-black/70 transition hover:border-[#8bcfa9] hover:bg-[#e8f5ee] hover:text-black"
+        >
+          <ArrowLeft size={18} strokeWidth={1.8} />
+          <span>Back</span>
+        </button>
 
-        {/* Header */}
         <div className="mb-10">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-11 h-11 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
-              <UserRound
-                size={21}
-                strokeWidth={1.8}
-              />
+              <UserRound size={21} strokeWidth={1.8} />
             </div>
 
             <div>
@@ -250,15 +291,10 @@ function Profile() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-          {/* Profile side information */}
           <div className="lg:col-span-1">
             <div className="bg-white border border-black/5 rounded-2xl p-6">
               <div className="w-16 h-16 rounded-full bg-[#bfe8d0] flex items-center justify-center mb-5">
-                <UserRound
-                  size={28}
-                  strokeWidth={1.7}
-                />
+                <UserRound size={28} strokeWidth={1.7} />
               </div>
 
               <h2 className="text-lg font-semibold text-black">
@@ -284,17 +320,11 @@ function Profile() {
             </div>
           </div>
 
-          {/* Forms */}
           <div className="lg:col-span-2 space-y-8">
-
-            {/* Personal Information */}
             <section className="bg-white border border-black/5 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-7">
                 <div className="w-10 h-10 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
-                  <UserRound
-                    size={19}
-                    strokeWidth={1.8}
-                  />
+                  <UserRound size={19} strokeWidth={1.8} />
                 </div>
 
                 <div>
@@ -322,12 +352,8 @@ function Profile() {
 
               <form onSubmit={handleProfileSubmit}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-
                   <div>
-                    <label className={labelClass}>
-                      First Name
-                    </label>
-
+                    <label className={labelClass}>First Name</label>
                     <input
                       type="text"
                       name="first_name"
@@ -339,10 +365,7 @@ function Profile() {
                   </div>
 
                   <div>
-                    <label className={labelClass}>
-                      Last Name
-                    </label>
-
+                    <label className={labelClass}>Last Name</label>
                     <input
                       type="text"
                       name="last_name"
@@ -354,10 +377,7 @@ function Profile() {
                   </div>
 
                   <div>
-                    <label className={labelClass}>
-                      Username
-                    </label>
-
+                    <label className={labelClass}>Username</label>
                     <input
                       type="text"
                       name="username"
@@ -369,10 +389,7 @@ function Profile() {
                   </div>
 
                   <div>
-                    <label className={labelClass}>
-                      Email
-                    </label>
-
+                    <label className={labelClass}>Email</label>
                     <input
                       type="email"
                       name="email"
@@ -384,10 +401,7 @@ function Profile() {
                   </div>
 
                   <div className="sm:col-span-2">
-                    <label className={labelClass}>
-                      Phone Number
-                    </label>
-
+                    <label className={labelClass}>Phone Number</label>
                     <input
                       type="tel"
                       name="phone_number"
@@ -406,23 +420,16 @@ function Profile() {
                     className="flex items-center gap-2 px-5 py-3 rounded-xl bg-black text-white text-sm font-semibold hover:bg-black/85 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save size={17} />
-
-                    {savingProfile
-                      ? "Saving..."
-                      : "Save Changes"}
+                    {savingProfile ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
               </form>
             </section>
 
-            {/* Security */}
             <section className="bg-white border border-black/5 rounded-2xl p-6 sm:p-8">
               <div className="flex items-center gap-3 mb-7">
                 <div className="w-10 h-10 rounded-xl bg-[#e8f5ee] flex items-center justify-center">
-                  <LockKeyhole
-                    size={19}
-                    strokeWidth={1.8}
-                  />
+                  <LockKeyhole size={19} strokeWidth={1.8} />
                 </div>
 
                 <div>
@@ -450,8 +457,6 @@ function Profile() {
 
               <form onSubmit={handlePasswordSubmit}>
                 <div className="space-y-5">
-
-                  {/* Current Password */}
                   <div>
                     <label className={labelClass}>
                       Current Password
@@ -459,24 +464,25 @@ function Profile() {
 
                     <div className="relative">
                       <input
-                        type={
-                          showPasswords.current
-                            ? "text"
-                            : "password"
-                        }
+                        type={showPasswords.current ? "text" : "password"}
                         name="current_password"
                         value={passwords.current_password}
                         onChange={handlePasswordChange}
                         className={`${inputClass} pr-12`}
                         placeholder="Enter current password"
+                        autoComplete="current-password"
+                        required
                       />
 
                       <button
                         type="button"
-                        onClick={() =>
-                          togglePassword("current")
-                        }
+                        onClick={() => togglePassword("current")}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition"
+                        aria-label={
+                          showPasswords.current
+                            ? "Hide current password"
+                            : "Show current password"
+                        }
                       >
                         {showPasswords.current ? (
                           <EyeOff size={18} />
@@ -487,32 +493,30 @@ function Profile() {
                     </div>
                   </div>
 
-                  {/* New Password */}
                   <div>
-                    <label className={labelClass}>
-                      New Password
-                    </label>
+                    <label className={labelClass}>New Password</label>
 
                     <div className="relative">
                       <input
-                        type={
-                          showPasswords.new
-                            ? "text"
-                            : "password"
-                        }
+                        type={showPasswords.new ? "text" : "password"}
                         name="new_password"
                         value={passwords.new_password}
                         onChange={handlePasswordChange}
                         className={`${inputClass} pr-12`}
                         placeholder="Enter new password"
+                        autoComplete="new-password"
+                        required
                       />
 
                       <button
                         type="button"
-                        onClick={() =>
-                          togglePassword("new")
-                        }
+                        onClick={() => togglePassword("new")}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition"
+                        aria-label={
+                          showPasswords.new
+                            ? "Hide new password"
+                            : "Show new password"
+                        }
                       >
                         {showPasswords.new ? (
                           <EyeOff size={18} />
@@ -523,7 +527,6 @@ function Profile() {
                     </div>
                   </div>
 
-                  {/* Confirm Password */}
                   <div>
                     <label className={labelClass}>
                       Confirm New Password
@@ -531,24 +534,25 @@ function Profile() {
 
                     <div className="relative">
                       <input
-                        type={
-                          showPasswords.confirm
-                            ? "text"
-                            : "password"
-                        }
+                        type={showPasswords.confirm ? "text" : "password"}
                         name="confirm_password"
                         value={passwords.confirm_password}
                         onChange={handlePasswordChange}
                         className={`${inputClass} pr-12`}
                         placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        required
                       />
 
                       <button
                         type="button"
-                        onClick={() =>
-                          togglePassword("confirm")
-                        }
+                        onClick={() => togglePassword("confirm")}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-black/40 hover:text-black transition"
+                        aria-label={
+                          showPasswords.confirm
+                            ? "Hide confirmation password"
+                            : "Show confirmation password"
+                        }
                       >
                         {showPasswords.confirm ? (
                           <EyeOff size={18} />
@@ -567,7 +571,6 @@ function Profile() {
                     className="flex items-center gap-2 px-5 py-3 rounded-xl bg-black text-white text-sm font-semibold hover:bg-black/85 transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <KeyRound size={17} />
-
                     {changingPassword
                       ? "Changing..."
                       : "Change Password"}
@@ -575,7 +578,6 @@ function Profile() {
                 </div>
               </form>
             </section>
-
           </div>
         </div>
       </div>

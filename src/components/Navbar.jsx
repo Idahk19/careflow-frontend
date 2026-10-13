@@ -198,19 +198,6 @@ function Navbar() {
                         </span>
                       </Link>
 
-                      {isPatient && (
-                        <Link
-                          to="/my-care"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-3 px-4 py-3 rounded-xl text-black dark:text-white hover:bg-[#e8f5ee] dark:hover:bg-[#223129] transition"
-                        >
-                          <HeartPulse size={17} strokeWidth={1.8} />
-
-                          <span className="text-sm font-medium">
-                            My Care
-                          </span>
-                        </Link>
-                      )}
 
                       <div className="h-px bg-black/5 dark:bg-white/10 my-2"></div>
 
