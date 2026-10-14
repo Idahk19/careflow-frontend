@@ -96,27 +96,39 @@ function PatientAppointments() {
     }
   };
 
-  const handleDelete = async (appointmentId) => {
-    try {
-      setError("");
+const handleDelete = async (appointmentId) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this appointment?"
+  );
 
-      await api.delete(
-        `/appointments/${appointmentId}/delete/`
-      );
+  if (!confirmed) {
+    return;
+  }
 
-      await fetchAppointments();
-    } catch (error) {
-      console.error(
-        "Failed to delete appointment:",
-        error.response?.data || error
-      );
+  try {
+    setError("");
 
-      setError(
-        error.response?.data?.detail ||
-          "Failed to delete appointment."
-      );
-    }
-  };
+    await api.delete(
+      `/appointments/${appointmentId}/delete/`
+    );
+
+    setAppointments((currentAppointments) =>
+      currentAppointments.filter(
+        (appointment) => appointment.id !== appointmentId
+      )
+    );
+  } catch (error) {
+    console.error(
+      "Failed to delete appointment:",
+      error.response?.data || error
+    );
+
+    setError(
+      error.response?.data?.detail ||
+        "Failed to delete appointment. Please try again."
+    );
+  }
+};
 
   const getTomorrowDate = () => {
     const tomorrow = new Date();
