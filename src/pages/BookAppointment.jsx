@@ -11,6 +11,43 @@ import { useNavigate } from "react-router-dom";
 import PatientSidebar from "../components/PatientSidebar";
 import api from "../services/api";
 
+const getLocalToday = () => {
+  const now = new Date();
+
+  return [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, "0"),
+    String(now.getDate()).padStart(2, "0"),
+  ].join("-");
+};
+
+const isSlotInFuture = (slot, date, now = new Date()) => {
+  if (!date || !slot?.start_time) return false;
+
+  const [year, month, day] = date.split("-").map(Number);
+  const [hours, minutes] = slot.start_time.split(":").map(Number);
+
+  const slotDateTime = new Date(
+    year,
+    month - 1,
+    day,
+    hours,
+    minutes,
+    0,
+    0
+  );
+
+  return slotDateTime.getTime() > now.getTime();
+};
+
+const filterAvailableSlots = (slotList, date, now = new Date()) => {
+  return slotList.filter(
+    (slot) =>
+      slot.is_available !== false &&
+      isSlotInFuture(slot, date, now)
+  );
+};
+
 function BookAppointment() {
   const navigate = useNavigate();
 
@@ -31,15 +68,39 @@ function BookAppointment() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
+  const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  const today = [
+    currentTime.getFullYear(),
+    String(currentTime.getMonth() + 1).padStart(2, "0"),
+    String(currentTime.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  const availableSlots = filterAvailableSlots(
+    slots,
+    selectedDate,
+    currentTime
+  );
+
+  const selectedSlotDetails = availableSlots.find(
+    (slot) => String(slot.id) === String(selectedSlot)
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const fetchServices = async () => {
       try {
         setLoadingServices(true);
         setError("");
 
-        const response = await api.get(
-          "/hospital/services/"
-        );
+        const response = await api.get("/hospital/services/");
 
         const data = Array.isArray(response.data)
           ? response.data
@@ -49,11 +110,7 @@ function BookAppointment() {
           data.filter((service) => service.is_active !== false)
         );
       } catch (error) {
-        console.error(
-          "Failed to fetch services:",
-          error
-        );
-
+        console.error("Failed to fetch services:", error);
         setError("Failed to load services.");
       } finally {
         setLoadingServices(false);
@@ -64,10 +121,12 @@ function BookAppointment() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchDoctors = async () => {
       if (!selectedService) {
         setDoctors([]);
-        setSelectedDoctor("");
+        setLoadingDoctors(false);
         return;
       }
 
@@ -75,9 +134,9 @@ function BookAppointment() {
         setLoadingDoctors(true);
         setError("");
 
-        const response = await api.get(
-          "/hospital/doctors/"
-        );
+        const response = await api.get("/hospital/doctors/");
+
+        if (cancelled) return;
 
         const data = Array.isArray(response.data)
           ? response.data
@@ -89,33 +148,43 @@ function BookAppointment() {
 
         setDoctors(activeDoctors);
       } catch (error) {
-        console.error(
-          "Failed to fetch doctors:",
-          error
-        );
+        if (cancelled) return;
 
+        console.error("Failed to fetch doctors:", error);
         setError("Failed to load doctors.");
       } finally {
-        setLoadingDoctors(false);
+        if (!cancelled) {
+          setLoadingDoctors(false);
+        }
       }
     };
-
-    fetchDoctors();
 
     setSelectedDoctor("");
     setSelectedDate("");
     setSelectedSlot("");
     setSlots([]);
+
+    fetchDoctors();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedService]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchSlots = async () => {
-      if (
-        !selectedService ||
-        !selectedDoctor ||
-        !selectedDate
-      ) {
+      if (!selectedService || !selectedDoctor || !selectedDate) {
         setSlots([]);
+        setLoadingSlots(false);
+        return;
+      }
+
+      if (selectedDate < getLocalToday()) {
+        setSlots([]);
+        setSelectedSlot("");
+        setError("Please select today or a future date.");
         return;
       }
 
@@ -128,44 +197,64 @@ function BookAppointment() {
           `/appointments/slots/?doctor=${selectedDoctor}&service=${selectedService}&date=${selectedDate}`
         );
 
+        if (cancelled) return;
+
         const data = Array.isArray(response.data)
           ? response.data
           : response.data.results || [];
 
         setSlots(
-          data.filter(
-            (slot) => slot.is_available !== false
-          )
+          filterAvailableSlots(data, selectedDate)
         );
       } catch (error) {
-        console.error(
-          "Failed to fetch available slots:",
-          error
-        );
+        if (cancelled) return;
+
+        console.error("Failed to fetch available slots:", error);
 
         setSlots([]);
 
         if (error.response?.data?.date) {
-          setError(error.response.data.date);
+          const dateError = error.response.data.date;
+
+          setError(
+            Array.isArray(dateError)
+              ? dateError.join(" ")
+              : String(dateError)
+          );
         } else {
           setError("Failed to load available time slots.");
         }
       } finally {
-        setLoadingSlots(false);
+        if (!cancelled) {
+          setLoadingSlots(false);
+        }
       }
     };
 
     fetchSlots();
-  }, [
-    selectedService,
-    selectedDoctor,
-    selectedDate,
-  ]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedService, selectedDoctor, selectedDate]);
+
+  useEffect(() => {
+    if (!selectedSlot) return;
+
+    const selected = availableSlots.find(
+      (slot) => String(slot.id) === String(selectedSlot)
+    );
+
+    if (!selected) {
+      setSelectedSlot("");
+    }
+  }, [availableSlots, selectedSlot]);
 
   const formatTime = (time) => {
     if (!time) return "";
 
     const [hours, minutes] = time.split(":");
+
     const date = new Date();
 
     date.setHours(
@@ -182,9 +271,11 @@ function BookAppointment() {
   };
 
   const formatSlot = (slot) => {
-    return `${formatTime(
-      slot.start_time
-    )} - ${formatTime(slot.end_time)}`;
+    if (!slot) return "";
+
+    return `${formatTime(slot.start_time)} - ${formatTime(
+      slot.end_time
+    )}`;
   };
 
   const handleServiceChange = (event) => {
@@ -205,8 +296,24 @@ function BookAppointment() {
   const handleDateChange = (event) => {
     setSelectedDate(event.target.value);
     setSelectedSlot("");
+    setSlots([]);
     setSuccess("");
     setError("");
+  };
+
+  const handleSlotChange = (slot) => {
+    if (!isSlotInFuture(slot, selectedDate)) {
+      setSelectedSlot("");
+      setCurrentTime(new Date());
+      setError(
+        "This time slot has already passed. Please select another slot."
+      );
+      return;
+    }
+
+    setSelectedSlot(slot.id);
+    setError("");
+    setSuccess("");
   };
 
   const handleBooking = async (event) => {
@@ -220,6 +327,28 @@ function BookAppointment() {
     ) {
       setError(
         "Please select a service, doctor, date and time slot."
+      );
+      return;
+    }
+
+    if (selectedDate < getLocalToday()) {
+      setError("You cannot book an appointment for a past date.");
+      return;
+    }
+
+    const slotToBook = slots.find(
+      (slot) => String(slot.id) === String(selectedSlot)
+    );
+
+    if (
+      !slotToBook ||
+      slotToBook.is_available === false ||
+      !isSlotInFuture(slotToBook, selectedDate)
+    ) {
+      setSelectedSlot("");
+      setCurrentTime(new Date());
+      setError(
+        "This time slot is no longer available. Please select another slot."
       );
       return;
     }
@@ -242,46 +371,55 @@ function BookAppointment() {
 
       setSelectedSlot("");
 
-      const response = await api.get(
-        `/appointments/slots/?doctor=${selectedDoctor}&service=${selectedService}&date=${selectedDate}`
-      );
+      try {
+        const response = await api.get(
+          `/appointments/slots/?doctor=${selectedDoctor}&service=${selectedService}&date=${selectedDate}`
+        );
 
-      const data = Array.isArray(response.data)
-        ? response.data
-        : response.data.results || [];
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data.results || [];
 
-      setSlots(
-        data.filter(
-          (slot) => slot.is_available !== false
-        )
-      );
+        setSlots(filterAvailableSlots(data, selectedDate));
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh available slots:",
+          refreshError
+        );
+      }
 
       setTimeout(() => {
         navigate("/patient/appointments");
       }, 1200);
     } catch (error) {
-      console.error(
-        "Failed to book appointment:",
-        error
-      );
+      console.error("Failed to book appointment:", error);
 
-      if (error.response?.data?.slot) {
-        setError(error.response.data.slot);
-      } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
+      const slotError = error.response?.data?.slot;
+      const detailError = error.response?.data?.detail;
+
+      if (slotError) {
+        setError(
+          Array.isArray(slotError)
+            ? slotError.join(" ")
+            : String(slotError)
+        );
+      } else if (detailError) {
+        setError(
+          Array.isArray(detailError)
+            ? detailError.join(" ")
+            : String(detailError)
+        );
       } else {
         setError(
           "Failed to book your appointment. Please try again."
         );
       }
+
+      setCurrentTime(new Date());
     } finally {
       setBooking(false);
     }
   };
-
-  const today = new Date()
-    .toISOString()
-    .split("T")[0];
 
   return (
     <div className="min-h-screen bg-[#f8faf9]">
@@ -289,14 +427,10 @@ function BookAppointment() {
 
       <main className="lg:ml-64 min-h-screen">
         <div className="max-w-5xl mx-auto p-5 sm:p-8 lg:p-10">
-
           <div className="mb-8">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-xl bg-[#bfe8d0] flex items-center justify-center">
-                <CalendarPlus
-                  size={22}
-                  strokeWidth={1.8}
-                />
+                <CalendarPlus size={22} strokeWidth={1.8} />
               </div>
 
               <div>
@@ -325,9 +459,7 @@ function BookAppointment() {
           )}
 
           <form onSubmit={handleBooking}>
-
             <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-7 mb-6">
-
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-black">
                   Appointment Details
@@ -339,7 +471,6 @@ function BookAppointment() {
               </div>
 
               <div className="space-y-6">
-
                 <div>
                   <label className="flex items-center gap-2 text-sm font-medium text-black mb-2">
                     <Stethoscope
@@ -385,8 +516,7 @@ function BookAppointment() {
                     value={selectedDoctor}
                     onChange={handleDoctorChange}
                     disabled={
-                      !selectedService ||
-                      loadingDoctors
+                      !selectedService || loadingDoctors
                     }
                     className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40 disabled:bg-black/[0.02] disabled:text-black/40"
                   >
@@ -433,12 +563,10 @@ function BookAppointment() {
                     className="w-full h-12 px-4 rounded-xl border border-black/10 bg-white text-sm outline-none focus:border-[#8bcfa9] focus:ring-2 focus:ring-[#bfe8d0]/40 disabled:bg-black/[0.02] disabled:text-black/40"
                   />
                 </div>
-
               </div>
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-7 mb-6">
-
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h2 className="text-lg font-semibold text-black">
@@ -452,10 +580,10 @@ function BookAppointment() {
                   </p>
                 </div>
 
-                {selectedDate && (
+                {selectedDate && !loadingSlots && (
                   <div className="hidden sm:flex items-center gap-2 text-sm text-[#27764d]">
                     <Clock3 size={16} />
-                    {slots.length} available
+                    {availableSlots.length} available
                   </div>
                 )}
               </div>
@@ -486,7 +614,7 @@ function BookAppointment() {
                     Checking available times...
                   </p>
                 </div>
-              ) : slots.length === 0 ? (
+              ) : availableSlots.length === 0 ? (
                 <div className="py-10 text-center">
                   <div className="w-14 h-14 rounded-2xl bg-[#f1f5f3] flex items-center justify-center mx-auto mb-4">
                     <Clock3
@@ -501,13 +629,13 @@ function BookAppointment() {
                   </h3>
 
                   <p className="text-sm text-black/50 mt-1">
-                    There are no available appointments for this date.
-                    Please choose another date.
+                    There are no available future appointments
+                    for this date. Please choose another date.
                   </p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                  {slots.map((slot) => {
+                  {availableSlots.map((slot) => {
                     const isSelected =
                       String(selectedSlot) ===
                       String(slot.id);
@@ -517,7 +645,7 @@ function BookAppointment() {
                         key={slot.id}
                         type="button"
                         onClick={() =>
-                          setSelectedSlot(slot.id)
+                          handleSlotChange(slot)
                         }
                         className={`min-h-14 px-3 py-3 rounded-xl border text-sm font-medium transition ${
                           isSelected
@@ -537,13 +665,10 @@ function BookAppointment() {
                   })}
                 </div>
               )}
-
             </div>
 
             <div className="bg-white rounded-2xl border border-black/5 p-5 sm:p-7">
-
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-
                 <div>
                   <p className="text-sm text-black/50">
                     Selected appointment
@@ -553,14 +678,8 @@ function BookAppointment() {
                     {selectedService &&
                     selectedDoctor &&
                     selectedDate &&
-                    selectedSlot
-                      ? `${formatSlot(
-                          slots.find(
-                            (slot) =>
-                              String(slot.id) ===
-                              String(selectedSlot)
-                          )
-                        )}`
+                    selectedSlotDetails
+                      ? formatSlot(selectedSlotDetails)
                       : "Select all appointment details"}
                   </p>
                 </div>
@@ -572,7 +691,7 @@ function BookAppointment() {
                     !selectedService ||
                     !selectedDoctor ||
                     !selectedDate ||
-                    !selectedSlot
+                    !selectedSlotDetails
                   }
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-[#bfe8d0] text-black font-semibold text-sm hover:bg-[#aee0c2] transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
@@ -580,11 +699,8 @@ function BookAppointment() {
                     ? "Booking..."
                     : "Book Appointment"}
                 </button>
-
               </div>
-
             </div>
-
           </form>
         </div>
       </main>
