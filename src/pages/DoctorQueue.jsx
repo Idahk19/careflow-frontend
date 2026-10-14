@@ -26,6 +26,7 @@ function DoctorQueue() {
   const fetchQueue = async () => {
     try {
       const response = await api.get("/queue/doctor/");
+
       setQueueData(response.data);
       setError("");
     } catch (error) {
@@ -40,7 +41,9 @@ function DoctorQueue() {
       }
 
       if (error.response?.status === 403) {
-        setError("You do not have permission to access the doctor queue.");
+        setError(
+          "You do not have permission to access the doctor queue."
+        );
         return;
       }
 
@@ -129,6 +132,13 @@ function DoctorQueue() {
     (patient) => patient.status === "WAITING"
   );
 
+  const skippedPatients = patients.filter(
+    (patient) => patient.status === "SKIPPED"
+  );
+
+  const hasCallablePatients =
+    waitingPatients.length > 0 || skippedPatients.length > 0;
+
   const calledPatient = patients.find(
     (patient) => patient.status === "CALLED"
   );
@@ -157,7 +167,7 @@ function DoctorQueue() {
             <button
               type="button"
               onClick={fetchQueue}
-              disabled={loading || actionLoading}
+              disabled={loading || actionLoading !== ""}
               className="self-start md:self-auto flex items-center gap-2 px-5 py-3 rounded-xl bg-white border border-black/5 text-black font-medium hover:bg-[#e8f5ee] transition disabled:opacity-50"
             >
               <RefreshCw
@@ -270,12 +280,13 @@ function DoctorQueue() {
                           )
                         }
                         disabled={
-                          waitingPatients.length === 0 ||
+                          !hasCallablePatients ||
                           actionLoading !== ""
                         }
                         className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#bfe8d0] text-black font-semibold hover:bg-[#aee0c2] transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <PhoneCall size={18} />
+
                         {actionLoading === "Call Next Patient"
                           ? "Calling..."
                           : "Call Next Patient"}
@@ -296,6 +307,7 @@ function DoctorQueue() {
                           className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#bfe8d0] text-black font-semibold hover:bg-[#aee0c2] transition disabled:opacity-50"
                         >
                           <Play size={18} />
+
                           {actionLoading === "Start Consultation"
                             ? "Starting..."
                             : "Start Consultation"}
@@ -313,6 +325,7 @@ function DoctorQueue() {
                           className="flex items-center gap-2 px-5 py-3 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition disabled:opacity-50"
                         >
                           <SkipForward size={18} />
+
                           {actionLoading === "Skip Patient"
                             ? "Skipping..."
                             : "Skip Patient"}
@@ -333,6 +346,7 @@ function DoctorQueue() {
                         className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#bfe8d0] text-black font-semibold hover:bg-[#aee0c2] transition disabled:opacity-50"
                       >
                         <CheckCircle2 size={18} />
+
                         {actionLoading === "Complete Consultation"
                           ? "Completing..."
                           : "Complete Consultation"}
@@ -367,7 +381,7 @@ function DoctorQueue() {
 
                 {!calledPatient &&
                   !inProgressPatient &&
-                  waitingPatients.length === 0 && (
+                  !hasCallablePatients && (
                     <div className="mt-5 p-4 rounded-xl bg-gray-50 border border-gray-100">
                       <p className="text-sm text-black/50">
                         There are no patients available to call.
@@ -492,7 +506,7 @@ function DoctorQueue() {
 
                             <div className="mt-4 md:mt-0">
                               <p className="md:hidden text-xs text-black/40 mb-1">
-                                Estimated Wait
+                                People Ahead
                               </p>
 
                               <div className="flex items-center gap-2 text-sm">
